@@ -1,259 +1,769 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>만서각 BOOK ART ARCHIVE</title>
-<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-/* ── 기본 디자인 시스템 ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --gold: #c9a84c; --cream: #f2ede3; --wood: #1a0f08; --border: rgba(201, 168, 76, 0.3); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookArt Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Noto+Serif+KR:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #FAF7F0;
+      --surface:  #F2EDE3;
+      --card:     #FFFFFF;
+      --gold:     #A07820;
+      --gold-lt:  #C9A84C;
+      --text:     #2A1F0E;
+      --sub:      #7A6A55;
+      --border:   #DDD0BC;
+      --red:      #B33A2A;
+      --radius:   8px;
+    }
 
-body { 
-  background: radial-gradient(circle at center, #2c1b10 0%, #1a0f08 100%); 
-  color: var(--cream); 
-  font-family: 'Noto Serif KR', serif; 
-  min-height: 100vh; 
-  word-break: keep-all;
-}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.header { 
-  position: sticky; top: 0; z-index: 100; 
-  background: rgba(26, 15, 8, 0.98); 
-  padding: 15px; border-bottom: 2px solid var(--gold); 
-  text-align: center; 
-}
-.brand-title { font-size: 18px; font-weight: 600; color: var(--gold); margin-bottom: 10px; letter-spacing: 0.1em; cursor: pointer; }
-.search-wrap { display: flex; border: 1px solid var(--gold); width: 100%; max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.3); }
-#code-input { flex: 1; background: transparent; border: none; color: var(--cream); padding: 12px; font-size: 15px; outline: none; }
-.search-btn { background: var(--gold); border: none; padding: 0 20px; color: #1a0f08; font-weight: 600; cursor: pointer; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Serif KR', serif;
+      min-height: 100vh;
+    }
 
-#app { padding: 20px; width: 100%; max-width: 900px; margin: 0 auto; }
-#error-msg { color: #ff6b6b; font-size: 11px; margin-top: 5px; text-align: center; }
+    /* ── Header ─────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 20px 14px;
+      text-align: center;
+    }
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    header .subtitle {
+      font-size: 11px;
+      color: var(--sub);
+      letter-spacing: 2px;
+      margin-top: 3px;
+    }
 
-/* ── 리스트 화면 ── */
-#list-screen { display: none; margin-top: 20px; }
-.list-count { color: var(--gold); margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    /* ── Nav Tabs ────────────────────────────── */
+    .nav-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-tab {
+      flex: 1;
+      padding: 11px 0;
+      text-align: center;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--sub);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-family: 'Noto Serif KR', serif;
+    }
+    .nav-tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      font-weight: 600;
+    }
 
-.result-item { 
-  display: flex; 
-  gap: 15px;
-  align-items: center;
-  background: rgba(255,255,255,0.03); 
-  border: 1px solid var(--border); 
-  padding: 12px; 
-  margin-bottom: 10px; 
-  cursor: pointer; 
-  transition: 0.2s; 
-}
-.result-item:hover { background: rgba(201, 168, 76, 0.1); }
+    /* ── App Container ───────────────────────── */
+    #app {
+      padding: 20px;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
 
-/* 목록용 섬네일 (사진 없으면 자동 숨김) */
-.list-thumb {
-  width: 70px;
-  height: 70px;
-  flex-shrink: 0;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid var(--border);
-  display: none; /* 기본적으로 숨김 */
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.list-thumb img { width: 100%; height: 100%; object-fit: contain; }
+    /* ── Search Box ──────────────────────────── */
+    .search-wrap { margin-top: 20px; }
+    .search-box {
+      display: flex;
+      gap: 8px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 11px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Noto Serif KR', serif;
+      transition: border-color 0.2s;
+    }
+    .search-box input::placeholder { color: var(--sub); }
+    .search-box input:focus { outline: none; border-color: var(--gold); }
+    .btn-search {
+      padding: 11px 20px;
+      background: var(--gold);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-family: 'Noto Serif KR', serif;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-search:hover { background: #8A6518; }
+    #error-msg { color: var(--red); font-size: 11px; margin-top: 6px; text-align: center; }
 
-.item-info { flex: 1; }
-.item-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
-.item-meta { font-size: 12px; opacity: 0.7; }
+    /* ── Loading ─────────────────────────────── */
+    #loading { display: none; text-align: center; padding: 48px 0; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { font-size: 13px; color: var(--sub); }
 
-/* ── 상세 화면 갤러리 ── */
-.gallery-container {
-  width: 100%;
-  display: none; /* 기본적으로 숨김 */
-  overflow-x: auto; 
-  scroll-snap-type: x mandatory;
-  gap: 10px;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-}
-.gallery-container::-webkit-scrollbar { height: 4px; }
-.gallery-container::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+    /* ── List Screen ─────────────────────────── */
+    #list-screen { display: none; margin-top: 20px; }
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .list-count { color: var(--gold); font-size: 13px; }
 
-.gallery-item {
-  flex: 0 0 100%; 
-  scroll-snap-align: start;
-  aspect-ratio: 3/4;
-  border: 1px solid var(--gold);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
-@media (min-width: 768px) { .gallery-item { flex: 0 0 300px; } }
-.gallery-item img { width: 100%; height: 100%; object-fit: contain; }
+    .result-item {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .result-item:hover {
+      background: #FFF9EE;
+      border-color: var(--gold-lt);
+    }
 
-/* 상세 정보 레이아웃 */
-#display-screen { display: none; width: 100%; }
-.panel-frame { background: rgba(15, 8, 4, 0.9); border: 1px solid var(--border); padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-.title-row { text-align: center; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-.main-title { font-size: 24px; font-weight: 600; color: var(--cream); }
+    /* 목록용 섬네일 (사진 없으면 자동 숨김) */
+    .list-thumb {
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: none; /* 기본적으로 숨김 */
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .list-thumb img { width: 100%; height: 100%; object-fit: contain; }
 
-.content-layout { display: flex; flex-direction: column; gap: 30px; }
-@media (min-width: 768px) { .content-layout { flex-direction: row; } .left-col { width: 320px; flex-shrink: 0; } .right-col { flex: 1; } }
+    .item-info { flex: 1; min-width: 0; }
+    .item-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 3px;
+      line-height: 1.3;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .item-sub { font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.meta-item { display: flex; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-.meta-key { width: 95px; flex-shrink: 0; font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-.meta-val { font-size: 15px; color: var(--cream); flex: 1; line-height: 1.4; }
+    /* ── 북마크 버튼 ────────────────────────── */
+    .btn-bm {
+      background: none;
+      border: none;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 6px;
+      color: var(--border);
+      transition: color 0.2s, transform 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-bm:hover { transform: scale(1.2); }
+    .btn-bm.saved { color: var(--gold); }
 
-.info-grid { display: grid; grid-template-columns: 1fr; gap: 0 20px; margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-@media (min-width: 600px) { .info-grid { grid-template-columns: 1fr 1fr; } }
+    /* ── Detail Screen ───────────────────────── */
+    #detail-screen { display: none; margin-top: 20px; }
 
-.desc-label { font-size: 11px; color: var(--gold); margin-bottom: 10px; border-left: 2px solid var(--gold); padding-left: 8px; }
-.desc-text { font-size: 14.5px; color: #c8bea8; line-height: 1.8; white-space: pre-wrap; text-align: justify; }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'Noto Serif KR', serif;
+      margin-bottom: 18px;
+      transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--border); }
 
-.bottom-bar { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 12px; color: var(--gold); }
+    /* 갤러리 (기본 숨김, 이미지 로드 시 표시) */
+    .gallery-container {
+      width: 100%;
+      display: none;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 10px;
+      margin-bottom: 22px;
+      border-radius: var(--radius);
+    }
+    .gallery-item {
+      scroll-snap-align: start;
+      flex-shrink: 0;
+      width: 100%;
+      max-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .gallery-item img { max-width: 100%; max-height: 420px; object-fit: contain; }
 
-.active-view { display: block; animation: fadeIn 0.4s ease forwards; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-</style>
+    /* 상세 헤더 */
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .detail-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .detail-title-sub { font-size: 14px; color: var(--sub); margin-top: 4px; }
+
+    /* ── 신규: 초판 / 작가 생몰년 뱃지 ──────── */
+    .detail-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+    .meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      color: var(--sub);
+    }
+    .meta-badge .badge-label { color: var(--gold); font-weight: 600; font-size: 11px; }
+
+    /* 상세 그리드 */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    @media (max-width: 500px) { .detail-grid { grid-template-columns: 1fr; } }
+
+    .detail-field {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 13px;
+    }
+    .field-label { font-size: 10px; color: var(--sub); margin-bottom: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .field-value { font-size: 14px; color: var(--text); }
+
+    .detail-desc {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    /* ── Bookmark Tab ────────────────────────── */
+    #bookmark-screen { display: none; margin-top: 20px; }
+    .bm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .btn-clear {
+      font-size: 12px;
+      color: var(--sub);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'Noto Serif KR', serif;
+    }
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+    /* 빈 상태 */
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--sub);
+    }
+    .empty-state .e-icon { font-size: 42px; margin-bottom: 14px; }
+    .empty-state p { font-size: 14px; line-height: 1.7; }
+
+    /* 스크롤바 */
+    .gallery-container::-webkit-scrollbar { height: 4px; }
+    .gallery-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="brand-title" onclick="location.reload()">만서각 BOOK ART ARCHIVE</div>
-  <div class="search-wrap">
-    <input id="code-input" type="text" placeholder="제목, 작가, 연도, 코드 등 입력">
-    <button class="search-btn" onclick="searchArtwork()">SEARCH</button>
-  </div>
-  <div id="error-msg"></div>
+<header>
+  <h1>BookArt</h1>
+  <p class="subtitle">Collection Archive</p>
+</header>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" id="tab-search" onclick="switchTab('search')">🔍 검색</div>
+  <div class="nav-tab" id="tab-bm" onclick="switchTab('bookmarks')">♥ 북마크</div>
 </div>
 
 <div id="app">
-  <div id="list-screen">
-    <div class="list-count" id="list-count"></div>
-    <div id="list-container"></div>
+
+  <!-- ── 검색 탭 ── -->
+  <div id="search-tab">
+    <div class="search-wrap">
+      <div class="search-box">
+        <input type="text" id="keyword" placeholder="작품명, 작가명, 코드로 검색"
+               onkeydown="if(event.key==='Enter') doSearch()">
+        <button class="btn-search" onclick="doSearch()">검색</button>
+      </div>
+      <div id="error-msg"></div>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>검색 중…</p>
+    </div>
+
+    <!-- 목록 화면 -->
+    <div id="list-screen">
+      <div class="list-header">
+        <span class="list-count" id="list-count"></span>
+      </div>
+      <div id="list-container"></div>
+    </div>
+
+    <!-- 상세 화면 -->
+    <div id="detail-screen">
+      <button class="back-btn" onclick="goBack()">← 목록으로</button>
+      <div id="detail-content"></div>
+    </div>
   </div>
-  <div id="display-screen">
-    <div id="detail-content"></div> 
+
+  <!-- ── 북마크 탭 ── -->
+  <div id="bookmark-screen">
+    <div class="bm-header">
+      <span class="list-count" id="bm-count"></span>
+      <button class="btn-clear" onclick="clearBookmarks()">전체 삭제</button>
+    </div>
+    <div id="bm-container"></div>
   </div>
-</div>
+
+</div><!-- #app -->
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyjCRfbUGUamYi-IcQZpW76Lg6YDa7eNBOaYJyywj81g-N8uzrk2Ct8rkUxJ6dogwcL/exec";
-let currentResults = [];
+/* ════════════════════════════════════════════
+   설정: Apps Script 배포 URL을 여기에 입력하세요
+   ════════════════════════════════════════════ */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxak15K6mN0VaNedvPzBHgTYCt4oXUPEwsvYHC_OyXRBs8NnNgQtUoOK1P5UJQ8vO2G/exec";
 
-function searchArtwork() {
-  const keyword = document.getElementById("code-input").value.trim();
-  if (!keyword) return;
-  document.getElementById("list-screen").style.display = "none";
-  document.getElementById("display-screen").style.display = "none";
-  document.getElementById("detail-content").innerHTML = ""; 
-  document.getElementById("list-container").innerHTML = ""; 
-  document.getElementById("error-msg").textContent = "서고 검색 중...";
+/* ─── 상태 ─────────────────────────────────── */
+let allData    = [];   // 현재 검색 결과
+let lastKeyword = "";  // 마지막 검색어
 
-  fetch(`${GAS_URL}?code=${encodeURIComponent(keyword)}`)
-    .then(res => res.json())
-    .then(json => {
-      document.getElementById("error-msg").textContent = "";
-      if (json.found) {
-        currentResults = json.data;
-        if (currentResults.length === 1) renderPanel(0);
-        else renderList(currentResults);
-      } else {
-        document.getElementById("error-msg").textContent = `"${keyword}" 결과가 없습니다.`;
-      }
-    });
+/* ════════════════════════════════════════════
+   북마크 (localStorage에 item 전체 저장)
+   ════════════════════════════════════════════ */
+function getBMs() {
+  try { return JSON.parse(localStorage.getItem("bookart_bm") || "{}"); }
+  catch { return {}; }
+}
+function saveBMs(obj) { localStorage.setItem("bookart_bm", JSON.stringify(obj)); }
+
+function isBookmarked(code) { return String(code) in getBMs(); }
+
+function toggleBM(code, e) {
+  if (e) e.stopPropagation();
+  const bms = getBMs();
+  const key  = String(code);
+  if (bms[key]) {
+    delete bms[key];
+  } else {
+    const item = allData.find(i => String(i["작품 코드"]) === key);
+    if (item) bms[key] = item;
+  }
+  saveBMs(bms);
+  // 모든 북마크 버튼 갱신
+  document.querySelectorAll(`.btn-bm[data-code="${code}"]`).forEach(btn => {
+    const saved = isBookmarked(code);
+    btn.textContent = saved ? "♥" : "♡";
+    btn.classList.toggle("saved", saved);
+  });
+  // 북마크 탭이 열려 있으면 새로고침
+  if (document.getElementById("bookmark-screen").style.display !== "none") renderBMScreen();
 }
 
-function renderList(data) {
-  const ls = document.getElementById("list-screen");
-  const container = document.getElementById("list-container");
-  document.getElementById("list-count").textContent = `총 ${data.length}건이 발견되었습니다.`;
-  
-  container.innerHTML = data.map((item, idx) => {
-    const photos = item["사진"] ? item["사진"].toString().split(",") : [];
-    const firstPhoto = photos.length > 0 ? photos[0].trim() : "";
+function clearBookmarks() {
+  if (!confirm("북마크를 모두 삭제할까요?")) return;
+  saveBMs({});
+  renderBMScreen();
+}
 
-    // ★ 엑박 방지: 이미지가 성공적으로 로드될 때만 부모(list-thumb)를 보여줌
+/* ════════════════════════════════════════════
+   탭 전환
+   ════════════════════════════════════════════ */
+function switchTab(tab) {
+  const isSearch = tab === "search";
+  document.getElementById("tab-search").classList.toggle("active", isSearch);
+  document.getElementById("tab-bm").classList.toggle("active", !isSearch);
+  document.getElementById("search-tab").style.display      = isSearch ? "block" : "none";
+  document.getElementById("bookmark-screen").style.display = isSearch ? "none"  : "block";
+  if (!isSearch) renderBMScreen();
+}
+
+/* ════════════════════════════════════════════
+   검색
+   ════════════════════════════════════════════ */
+async function doSearch() {
+  const keyword = document.getElementById("keyword").value.trim();
+  if (!keyword) { document.getElementById("error-msg").textContent = "검색어를 입력하세요."; return; }
+  document.getElementById("error-msg").textContent = "";
+  showLoading(true);
+
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
+    const json = await res.json();
+    showLoading(false);
+
+    if (!json.found || !json.data.length) {
+      document.getElementById("error-msg").textContent = "검색 결과가 없습니다.";
+      return;
+    }
+
+    allData      = json.data;
+    lastKeyword  = keyword;
+
+    // 히스토리: 검색 → ?q=keyword
+    history.pushState({ view: "list", keyword }, "", `?q=${encodeURIComponent(keyword)}`);
+    renderList();
+
+  } catch {
+    showLoading(false);
+    document.getElementById("error-msg").textContent = "서버 오류가 발생했습니다.";
+  }
+}
+
+function showLoading(on) {
+  document.getElementById("loading").style.display      = on ? "block" : "none";
+  document.getElementById("list-screen").style.display  = "none";
+  document.getElementById("detail-screen").style.display= "none";
+}
+
+/* ════════════════════════════════════════════
+   목록 렌더
+   ════════════════════════════════════════════ */
+function renderList() {
+  document.getElementById("list-screen").style.display   = "block";
+  document.getElementById("detail-screen").style.display = "none";
+  document.getElementById("list-count").textContent = `총 ${allData.length}건 발견`;
+  document.getElementById("list-container").innerHTML = allData.map((item, idx) => itemHTML(item, idx)).join("");
+}
+
+function itemHTML(item, idx) {
+  const photos    = item["사진"] ? item["사진"].toString().split(",") : [];
+  const firstPhoto= photos.length > 0 ? photos[0].trim() : "";
+  const thumbHTML = (firstPhoto && firstPhoto.startsWith("http"))
+    ? `<div class="list-thumb" id="lth-${idx}">
+         <img src="${firstPhoto}" onload="document.getElementById('lth-${idx}').style.display='flex'" loading="lazy">
+       </div>`
+    : "";
+
+  const code    = String(item["작품 코드"] || "");
+  const saved   = isBookmarked(code);
+  const titleKo = item["표제(국문)"] || "-";
+  const titleOr = item["표제(원어)"] || "";
+  const author  = item["작가(국문)"] || item["작가(원어)"] || item["작가 (원어)"] || "";
+  const year    = item["발행연도"]  || "";
+  const sub     = [titleOr, author, year].filter(Boolean).join(" · ");
+
+  return `
+    <div class="result-item" onclick="renderPanel(${idx})">
+      ${thumbHTML}
+      <div class="item-info">
+        <div class="item-title">${titleKo}</div>
+        <div class="item-sub">${sub}</div>
+      </div>
+      <button class="btn-bm ${saved ? "saved" : ""}" data-code="${code}"
+              onclick="toggleBM('${code}', event)" title="북마크">
+        ${saved ? "♥" : "♡"}
+      </button>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════
+   상세 렌더
+   ════════════════════════════════════════════ */
+function renderPanel(idx) {
+  const d = allData[idx];
+  if (!d) return;
+
+  // 히스토리: 상세 → ?q=keyword&item=idx
+  history.pushState(
+    { view: "detail", idx, keyword: lastKeyword },
+    "",
+    `?q=${encodeURIComponent(lastKeyword)}&item=${idx}`
+  );
+
+  document.getElementById("list-screen").style.display   = "none";
+  document.getElementById("detail-screen").style.display = "block";
+
+  /* 사진 */
+  const photos = d["사진"]
+    ? d["사진"].toString().split(",").map(u => u.trim()).filter(u => u.startsWith("http"))
+    : [];
+
+  const galleryHTML = photos.length > 0 ? `
+    <div class="gallery-container" id="main-gallery">
+      ${photos.map(url => `
+        <div class="gallery-item">
+          <img src="${url}" onload="document.getElementById('main-gallery').style.display='flex'" loading="lazy">
+        </div>`).join("")}
+    </div>` : "";
+
+  /* 북마크 버튼 */
+  const code  = String(d["작품 코드"] || "");
+  const saved = isBookmarked(code);
+
+  /* ★ 신규 필드: 초판연도 / 작가 출생·사망년도 */
+  const firstEd   = d["초판연도"]      ? String(d["초판연도"]).trim()      : "";
+  const birthYear = d["작가 출생년도"] ? String(d["작가 출생년도"]).trim() : "";
+  const deathYear = d["작가 사망년도"] ? String(d["작가 사망년도"]).trim() : "";
+
+  let badges = "";
+  if (firstEd)
+    badges += `<span class="meta-badge"><span class="badge-label">작품 초판</span>${firstEd}</span>`;
+  if (birthYear || deathYear) {
+    const life = birthYear && deathYear
+      ? `${birthYear} – ${deathYear}`
+      : birthYear || deathYear;
+    badges += `<span class="meta-badge"><span class="badge-label">작가 생몰년</span>${life}</span>`;
+  }
+
+  /* 나머지 필드 그리드 */
+  const fields = [
+    ["작품 코드",   d["작품 코드"]],
+    ["작가(국문)",  d["작가(국문)"]],
+    ["작가(원어)",  d["작가(원어)"] || d["작가 (원어)"]],
+    ["출판사",      d["출판사"]],
+    ["발행연도",    d["발행연도"]],
+    ["가로",        d["가로"]],
+    ["세로",        d["세로"]],
+    ["두께 D",      d["두께 D"]],
+    ["소전권서",    d["소전권서"]],
+    ["종",          d["종"]],
+    ["권",          d["권"]],
+    ["일러스트",    d["일러스트(국문)"]],
+    ["현위치",      d["현위치"]],
+    ["비고",        d["비고"]],
+  ].filter(([, v]) => v !== undefined && v !== null && v !== "");
+
+  const gridHTML = fields.map(([label, val]) => `
+    <div class="detail-field">
+      <div class="field-label">${label}</div>
+      <div class="field-value">${val}</div>
+    </div>`).join("");
+
+  const descHTML = d["도서 설명"]
+    ? `<div class="detail-desc">${d["도서 설명"]}</div>` : "";
+
+  document.getElementById("detail-content").innerHTML = `
+    ${galleryHTML}
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">${d["표제(국문)"] || ""}</div>
+        <div class="detail-title-sub">${d["표제(원어)"] || ""}</div>
+      </div>
+      <button class="btn-bm ${saved ? "saved" : ""}" data-code="${code}"
+              onclick="toggleBM('${code}', event)" title="북마크"
+              style="font-size:28px; padding:6px 8px; margin-top:2px;">
+        ${saved ? "♥" : "♡"}
+      </button>
+    </div>
+    ${badges ? `<div class="detail-meta-row">${badges}</div>` : ""}
+    <div class="detail-grid">${gridHTML}</div>
+    ${descHTML}
+  `;
+}
+
+/* ════════════════════════════════════════════
+   뒤로가기 (브라우저 history 연동)
+   ════════════════════════════════════════════ */
+function goBack() { history.back(); }
+
+window.addEventListener("popstate", async (e) => {
+  const st = e.state;
+  if (!st) {
+    // 맨 처음 상태 → 전부 숨김
+    document.getElementById("list-screen").style.display   = "none";
+    document.getElementById("detail-screen").style.display = "none";
+    return;
+  }
+  if (st.view === "list") {
+    document.getElementById("detail-screen").style.display = "none";
+    renderList();
+  } else if (st.view === "detail") {
+    if (!allData.length && st.keyword) {
+      // 새로고침 후 뒤로가기 → 재검색
+      document.getElementById("keyword").value = st.keyword;
+      await fetchAndRender(st.keyword, st.idx);
+    } else {
+      renderPanel(st.idx);
+    }
+  }
+});
+
+/* ════════════════════════════════════════════
+   북마크 탭 렌더
+   ════════════════════════════════════════════ */
+function renderBMScreen() {
+  const bms  = getBMs();
+  const keys = Object.keys(bms);
+  document.getElementById("bm-count").textContent = `북마크 ${keys.length}건`;
+
+  if (!keys.length) {
+    document.getElementById("bm-container").innerHTML = `
+      <div class="empty-state">
+        <div class="e-icon">♡</div>
+        <p>아직 북마크한 작품이 없어요.<br>검색 후 ♡를 눌러 저장해보세요.</p>
+      </div>`;
+    return;
+  }
+
+  // 북마크된 item들을 이용해 목록 렌더
+  // allData에 없으면 localStorage 데이터 사용
+  const items = keys.map(k => bms[k]);
+  document.getElementById("bm-container").innerHTML = items.map((item, i) => {
+    const photos    = item["사진"] ? item["사진"].toString().split(",") : [];
+    const firstPhoto= photos.length > 0 ? photos[0].trim() : "";
     const thumbHTML = (firstPhoto && firstPhoto.startsWith("http"))
-      ? `<div class="list-thumb" id="thumb-box-${idx}">
-           <img src="${firstPhoto}" onload="document.getElementById('thumb-box-${idx}').style.display='flex'">
+      ? `<div class="list-thumb" id="bmth-${i}">
+           <img src="${firstPhoto}" onload="document.getElementById('bmth-${i}').style.display='flex'" loading="lazy">
          </div>`
       : "";
+    const code    = String(item["작품 코드"] || "");
+    const titleKo = item["표제(국문)"] || "-";
+    const titleOr = item["표제(원어)"] || "";
+    const author  = item["작가(국문)"] || item["작가(원어)"] || item["작가 (원어)"] || "";
+    const year    = item["발행연도"]   || "";
+    const sub     = [titleOr, author, year].filter(Boolean).join(" · ");
+
+    // 클릭 시: allData에 있으면 바로 패널, 없으면 검색 후 열기
+    const clickFn = `openBMItem('${code}')`;
 
     return `
-      <div class="result-item" onclick="renderPanel(${idx})">
+      <div class="result-item" onclick="${clickFn}">
         ${thumbHTML}
         <div class="item-info">
-          <div class="item-title">${item["표제(국문)"]} ${item["표제(원어)"] ? `<small style="color:var(--gold); font-weight:normal;">(${item["표제(원어)"]})</small>` : ""}</div>
-          <div class="item-meta">작가: ${item["작가(국문)"] || "-"} | 연도: ${item["발행연도"] || "-"}</div>
-          <div class="item-meta">코드: ${item["작품 코드"]}</div>
+          <div class="item-title">${titleKo}</div>
+          <div class="item-sub">${sub}</div>
         </div>
-      </div>
-    `;
+        <button class="btn-bm saved" data-code="${code}"
+                onclick="toggleBM('${code}', event)" title="북마크 해제">♥</button>
+      </div>`;
   }).join("");
-  
-  ls.style.display = "block";
-  ls.classList.add("active-view");
-  window.scrollTo(0, 0);
 }
 
-function renderPanel(idx) {
-  const d = currentResults[idx];
-  const ds = document.getElementById("display-screen");
-  const content = document.getElementById("detail-content");
-  document.getElementById("list-screen").style.display = "none";
+async function openBMItem(code) {
+  const bms  = getBMs();
+  const item = bms[String(code)];
+  if (!item) return;
 
-  const photos = d["사진"] ? d["사진"].toString().split(",").map(url => url.trim()).filter(url => url.startsWith("http")) : [];
-  
-  // ★ 엑박 방지: 갤러리도 이미지가 1개라도 로드 성공해야 보여줌
-  const photoHTML = photos.length > 0 ? `
-    <div class="gallery-container" id="main-gallery">
-      ${photos.map((url, pIdx) => `
-        <div class="gallery-item">
-          <img src="${url}" onload="document.getElementById('main-gallery').style.display='flex'">
-        </div>`).join("")}
-    </div>
-  ` : "";
-
-  content.innerHTML = `
-    <div class="panel-frame">
-      <div class="title-row"><div class="main-title">${d["표제(국문)"]} ${d["표제(원어)"] ? `(${d["표제(원어)"]})` : ""}</div></div>
-      <div class="content-layout">
-        <div class="left-col">
-          ${photoHTML}
-          <div class="meta-item"><div class="meta-key">작품 코드</div><div class="meta-val" style="color:var(--gold); font-weight:600;">${d["작품 코드"]}</div></div>
-          <div class="meta-item"><div class="meta-key">위치</div><div class="meta-val">${d["현위치"] || "-"}</div></div>
-        </div>
-        <div class="right-col">
-          <div class="info-grid">
-            <div class="meta-item"><div class="meta-key">작가</div><div class="meta-val">${(d["작가(국문)"] || "-") + (d["작가(원어)"] || d["작가 (원어)"] ? ` (${d["작가(원어)"] || d["작가 (원어)"]})` : "")}</div></div>
-            <div class="meta-item"><div class="meta-key">발행연도</div><div class="meta-val">${d["발행연도"] || "-"}</div></div>
-            <div class="meta-item"><div class="meta-key">소전권서</div><div class="meta-val">${d["소전권서"] || "-"}</div></div>
-            <div class="meta-item"><div class="meta-key">출판사</div><div class="meta-val">${d["출판사"] || "-"}</div></div>
-            <div class="meta-item"><div class="meta-key">일러스트</div><div class="meta-val">${d["일러스트(국문)"] || "-"}</div></div>
-            <div class="meta-item"><div class="meta-key">종/권</div><div class="meta-val">${(d["종"] || "-")}종 / ${(d["권"] || "-")}권</div></div>
-            <div class="meta-item" style="grid-column: span 1;"><div class="meta-key">크기</div><div class="meta-val">${d["가로"] ? `${d["가로"]}x${d["세로"]}cm (두께 ${d["두께 D"] || '0'}cm)` : "-"}</div></div>
-          </div>
-          <div class="desc-label">DESCRIPTION</div>
-          <div class="desc-text">${d["도서 설명"] || "내용이 없습니다."}</div>
-        </div>
-      </div>
-      <div class="bottom-bar">
-        <div style="font-style: italic; max-width: 70%;">${d["비고"] ? "비고: " + d["비고"] : ""}</div>
-        <div>소전문화재단</div>
-      </div>
-    </div>
-  `;
-
-  ds.style.display = "block";
-  ds.classList.add("active-view");
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // allData에 없으면 임시로 세팅
+  const existIdx = allData.findIndex(i => String(i["작품 코드"]) === String(code));
+  if (existIdx >= 0) {
+    switchTab("search");
+    renderPanel(existIdx);
+  } else {
+    // 검색어가 없는 경우 북마크 item을 allData에 추가해서 열기
+    allData = [item];
+    lastKeyword = String(item["표제(국문)"] || item["작품 코드"] || "");
+    switchTab("search");
+    renderPanel(0);
+  }
 }
 
-document.getElementById("code-input").addEventListener("keypress", (e) => { if (e.key === "Enter") searchArtwork(); });
+/* ════════════════════════════════════════════
+   URL 파라미터로 초기 상태 복원 (새로고침 대응)
+   ════════════════════════════════════════════ */
+async function fetchAndRender(keyword, itemIdx) {
+  showLoading(true);
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
+    const json = await res.json();
+    showLoading(false);
+    if (!json.found || !json.data.length) return;
+    allData     = json.data;
+    lastKeyword = keyword;
+    if (itemIdx !== null && allData[itemIdx]) renderPanel(itemIdx);
+    else renderList();
+  } catch {
+    showLoading(false);
+  }
+}
+
+(function init() {
+  const params = new URLSearchParams(window.location.search);
+  const q      = params.get("q");
+  const item   = params.get("item");
+  if (q) {
+    document.getElementById("keyword").value = q;
+    fetchAndRender(q, item !== null ? parseInt(item) : null);
+  }
+})();
 </script>
 </body>
 </html>
