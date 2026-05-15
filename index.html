@@ -535,7 +535,7 @@ function renderPanel(idx) {
     `?q=${encodeURIComponent(lastKeyword)}&item=${idx}`);
   setView("detail");
 
-  /* 사진 — onerror로 실패 아이템만 숨김 */
+  /* 사진 처리 */
   const photos = d["사진"]
     ? d["사진"].toString().split(",").map(u => u.trim()).filter(u => u.startsWith("http"))
     : [];
@@ -548,7 +548,7 @@ function renderPanel(idx) {
         </div>`).join("")}
     </div>` : "";
 
-  /* 신규: 초판연도 / 작가 생몰년 뱃지 */
+  /* 신규: 뱃지 처리 */
   const firstEd   = d["초판연도"]      ? String(d["초판연도"]).trim()      : "";
   const birthYear = d["작가 출생년도"] ? String(d["작가 출생년도"]).trim() : "";
   const deathYear = d["작가 사망년도"] ? String(d["작가 사망년도"]).trim() : "";
@@ -558,26 +558,37 @@ function renderPanel(idx) {
   if (birthYear || deathYear)
     badges += `<span class="meta-badge"><span class="badge-label">작가 생몰년</span>${birthYear && deathYear ? birthYear + " – " + deathYear : birthYear || deathYear}</span>`;
 
-  /* 상세 필드 그리드 */
+  /* ★ 요청사항 1: 가로x세로x두께 합치기 */
+  const size = [d["가로"], d["세로"], d["두께 D"]].filter(v => v).join(" x ");
+  
+  /* ★ 요청사항 2: 종, 권 단위 붙이기 */
+  const jong = d["종"] ? `${d["종"]}종` : "";
+  const gwon = d["권"] ? `${d["권"]}권` : "";
+
+  /* 상세 필드 그리드 구성 */
   const fields = [
     ["작품 코드",  d["작품 코드"]],
     ["작가(국문)", d["작가(국문)"]],
     ["작가(원어)", d["작가(원어)"] || d["작가 (원어)"]],
-    ["출판사",     d["출판사"]],
-    ["발행연도",   d["발행연도"]],
-    ["가로",       d["가로"]],
-    ["세로",       d["세로"]],
-    ["두께 D",     d["두께 D"]],
-    ["소전권서",   d["소전권서"]],
-    ["종",         d["종"]],
-    ["권",         d["권"]],
-    ["일러스트",   d["일러스트(국문)"]],
-    ["현위치",     d["현위치"]],
-    ["비고",       d["비고"]],
-  ].filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "");
+    ["출판사",      d["출판사"]],
+    ["발행연도",    d["발행연도"]],
+    ["크기(가x세x두)", size], // 합쳐진 크기
+    ["소전권서",    d["소전권서"]],
+    ["종/권",       [jong, gwon].filter(v => v).join(", ")], // 0종, 0권 형태
+    ["일러스트",    d["일러스트(국문)"]],
+    ["현위치",      d["현위치"]],
+    ["비고",        d["비고"]],
+  ].filter(([, v]) => v && String(v).trim() !== "");
 
   const code = String(d["작품 코드"] || "");
   const s    = isBookmarked(code);
+
+  /* ★ 요청사항 3: 도서 설명 섹션에 제목 추가 */
+  const descHTML = d["도서 설명"] ? `
+    <div class="detail-desc">
+      <div class="field-label" style="margin-bottom: 8px; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px;">도서 설명</div>
+      <div>${String(d["도서 설명"]).replace(/\n/g, '<br>')}</div>
+    </div>` : "";
 
   document.getElementById("detail-content").innerHTML = `
     ${galleryHTML}
@@ -600,7 +611,7 @@ function renderPanel(idx) {
           <div class="field-value">${val}</div>
         </div>`).join("")}
     </div>
-    ${d["도서 설명"] ? `<div class="detail-desc">${d["도서 설명"]}</div>` : ""}
+    ${descHTML}
   `;
 }
 
