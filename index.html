@@ -236,7 +236,7 @@
     .gallery-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     /* ── 상세 헤더 ── */
-    .detail-header {
+    .detail- {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -336,7 +336,7 @@
 </head>
 <body>
 
-<header>
+<header onclick="goHome()" style="cursor: pointer;">
   <h1>BOOKART</h1>
 </header>
 
@@ -451,7 +451,21 @@ function switchTab(tab) {
   document.getElementById("bookmark-screen").style.display = s ? "none"  : "block";
   if (!s) renderBMScreen();
 }
-
+/* ── 메인 홈으로 이동 (초기화) ── */
+function goHome() {
+  // 1. 입력창 비우기
+  document.getElementById("keyword").value = "";
+  // 2. 에러 메시지 비우기
+  document.getElementById("error-msg").textContent = "";
+  // 3. 모든 데이터 초기화
+  allData = [];
+  lastKeyword = "";
+  // 4. URL 파라미터 제거 및 히스토리 정리 (주소창 깔끔하게)
+  history.pushState({}, "", window.location.pathname);
+  // 5. 검색 탭으로 전환 및 화면 상태 초기화
+  switchTab('search');
+  setView("none"); 
+}
 /* ════════════════════════════════════════════
    검색
    ════════════════════════════════════════════ */
