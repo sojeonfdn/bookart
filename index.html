@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BookArt</title>
   <style>
-    /* ── 아이보리 컬러 변수 (원본 스타일 유지) ── */
+    /* ── 아이보리 컬러 변수 (원본 레이아웃 유지) ── */
     :root {
       --bg:      #F7F3EA;
       --surface: #EDE7D6;
@@ -105,7 +105,7 @@
     .btn-search:hover { background: #a88530; }
     #error-msg { color: var(--red); font-size: 11px; margin-top: 5px; text-align: center; }
 
-    /* ── [신규] 가나다순 작가 나열 섹션 스타일 ── */
+    /* ── [개선] A-Z 순 (한글 병기) 작가 리스트 디렉토리 스타일 ── */
     .artist-directory {
       margin-top: 30px;
       background: rgba(255, 255, 255, 0.4);
@@ -134,13 +134,15 @@
     }
     .artist-list {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
+      flex-direction: column;
+      gap: 6px;
     }
     .artist-item {
       font-size: 14px;
       color: var(--sub);
       cursor: pointer;
+      display: inline-block;
+      align-self: flex-start;
       transition: color 0.15s;
     }
     .artist-item:hover {
@@ -387,7 +389,7 @@
   <div id="search-tab">
     <div class="search-wrap">
       <div class="search-box">
-        <input type="text" id="keyword" placeholder="작품명, 작가명, 코드 등으로 검색"
+        <input type="text" id="keyword" placeholder="작품명, 작가명, 소전권서, 도서 설명 등으로 검색"
                onkeydown="if(event.key==='Enter') doSearch()">
         <button class="btn-search" onclick="doSearch()">검색</button>
       </div>
@@ -396,37 +398,37 @@
 
     <div id="home-discovery-zone">
       <div class="artist-directory">
-        <h3 class="directory-title">작가 명단 (가나다/A-Z순)</h3>
+        <h3 class="directory-title">작가 명단 (A-Z순 / 한글 병기)</h3>
         
         <div class="directory-group">
-          <div class="group-label">ㅁ</div>
+          <div class="group-label">B</div>
           <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('마티스')">앙리 마티스</span>
-          </div>
-        </div>
-
-        <div class="directory-group">
-          <div class="group-label">ㅂ</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('보나르')">피에르 보나르</span>
-          </div>
-        </div>
-
-        <div class="directory-group">
-          <div class="group-label">ㅍ</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('피카소')">파블로 피카소</span>
+            <span class="artist-item" onclick="clickArtist('보나르')">Bonnard, Pierre (피에르 보나르)</span>
           </div>
         </div>
 
         <div class="directory-group">
           <div class="group-label">D</div>
           <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('Dali')">살바도르 달리(Dali)</span>
+            <span class="artist-item" onclick="clickArtist('달리')">Dalí, Salvador (살바도르 달리)</span>
+          </div>
+        </div>
+
+        <div class="directory-group">
+          <div class="group-label">M</div>
+          <div class="artist-list">
+            <span class="artist-item" onclick="clickArtist('마티스')">Matisse, Henri (앙리 마티스)</span>
+          </div>
+        </div>
+
+        <div class="directory-group">
+          <div class="group-label">P</div>
+          <div class="artist-list">
+            <span class="artist-item" onclick="clickArtist('피카소')">Picasso, Pablo (파블로 피카소)</span>
           </div>
         </div>
         
-      </div>
+        </div>
     </div>
 
     <div id="loading">
@@ -461,4 +463,220 @@
 /* ════════════════════════════════════════════
    ★ Apps Script 배포 URL
    ════════════════════════════════════════════ */
-const SCRIPT_URL = "
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxak15K6mN0VaNedvPzBHgTYCt4oXUPEwsvYHC_OyXRBs8NnNgQtUoOK1P5UJQ8vO2G/exec";
+
+/* ── 상태 관리 ── */
+let allData     = [];
+let lastKeyword = "";
+
+const BM_EMPTY = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`;
+const BM_SAVED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`;
+
+/* ════════════════════════════════════════════
+   북마크 기능 로직 (복원 완동 보장)
+   ════════════════════════════════════════════ */
+function getBMs()           { try { return JSON.parse(localStorage.getItem("bookart_bm") || "{}"); } catch { return {}; } }
+function saveBMs(obj)       { localStorage.setItem("bookart_bm", JSON.stringify(obj)); }
+function isBookmarked(code) { return String(code) in getBMs(); }
+
+function toggleBM(code, e) {
+  if (e) e.stopPropagation();
+  const bms = getBMs(), key = String(code);
+  if (bms[key]) {
+    delete bms[key];
+  } else {
+    const item = allData.find(i => String(i["작품 코드"]) === key);
+    if (item) bms[key] = item;
+  }
+  saveBMs(bms);
+  document.querySelectorAll(`.btn-bm[data-code="${code}"]`).forEach(btn => {
+    const s = isBookmarked(code);
+    btn.innerHTML = s ? BM_SAVED : BM_EMPTY;
+    btn.classList.toggle("saved", s);
+  });
+  if (document.getElementById("bookmark-screen").style.display !== "none") renderBMScreen();
+}
+
+function clearBookmarks() {
+  if (!confirm("북마크를 모두 삭제할까요?")) return;
+  saveBMs({});
+  renderBMScreen();
+}
+
+/* ── 화면 전환 탭 제어 ── */
+function switchTab(tab) {
+  const s = tab === "search";
+  document.getElementById("tab-search").classList.toggle("active", s);
+  document.getElementById("tab-bm").classList.toggle("active", !s);
+  document.getElementById("search-tab").style.display      = s ? "block" : "none";
+  document.getElementById("bookmark-screen").style.display = s ? "none"  : "block";
+  if (!s) renderBMScreen();
+}
+
+/* ── 홈 버튼 초기화 ── */
+function goHome() {
+  document.getElementById("keyword").value = "";
+  document.getElementById("error-msg").textContent = "";
+  allData = [];
+  lastKeyword = "";
+  history.pushState({}, "", window.location.pathname);
+  switchTab('search');
+  setView("none"); 
+  document.getElementById("home-discovery-zone").style.display = "block";
+}
+
+/* ── 작가 디렉토리 링크 연동 클릭 함수 ── */
+function clickArtist(name) {
+  document.getElementById("keyword").value = name;
+  doSearch();
+}
+
+/* ════════════════════════════════════════════
+   소전권서 및 설명 다중 필터 전면 검색 (doSearch)
+   ════════════════════════════════════════════ */
+async function doSearch() {
+  const keyword = document.getElementById("keyword").value.trim();
+  if (!keyword) { document.getElementById("error-msg").textContent = "검색어를 입력하세요."; return; }
+  document.getElementById("error-msg").textContent = "";
+  
+  document.getElementById("home-discovery-zone").style.display = "none";
+  setView("loading");
+  
+  try {
+    // 1차 검색 요청 시도
+    let res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
+    let json = await res.json();
+    
+    // 만약 구글 시트 백엔드가 '소전권서'나 '설명' 텍스트를 인지 못 해 결과가 비어 있다면,
+    // 전체 범위를 우회 탐색하기 위해 공백을 보낸 후 2차 전수 필터 처리를 진행합니다.
+    if (!json.found || !json.data.length) {
+      const fallbackRes = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(" ")}`);
+      json = await fallbackRes.json();
+    }
+
+    if (!json.found || !json.data.length) {
+      showErrorUI("검색 결과가 없습니다.");
+      return;
+    }
+
+    const searchKey = keyword.toLowerCase();
+
+    // 브라우저 단에서 소전권서, 도서 설명 필드 매칭을 샅샅이 대조합니다.
+    const filtered = json.data.filter(item => {
+      const code  = String(item["작품 코드"] || "").toLowerCase();
+      const titleKo = String(item["표제(국문)"] || "").toLowerCase();
+      const titleEn = String(item["표제(원어)"] || "").toLowerCase();
+      const artistKo = String(item["작가(국문)"] || "").toLowerCase();
+      const artistEn = String(item["작가(원어)"] || item["작가 (원어)"] || "").toLowerCase();
+      const desc  = String(item["도서 설명"] || "").toLowerCase();
+      const classify = String(item["소전권서"] || "").toLowerCase();
+
+      return code.includes(searchKey) || titleKo.includes(searchKey) || titleEn.includes(searchKey) || 
+             artistKo.includes(searchKey) || artistEn.includes(searchKey) || desc.includes(searchKey) || classify.includes(searchKey);
+    });
+
+    if (filtered.length === 0) {
+      showErrorUI("검색 결과가 없습니다.");
+      return;
+    }
+
+    allData     = filtered;
+    lastKeyword = keyword;
+    history.pushState({ view: "list", keyword }, "", `?q=${encodeURIComponent(keyword)}`);
+    renderList();
+  } catch {
+    showErrorUI("서버 통신 중 오류가 발생했습니다.");
+  }
+}
+
+function showErrorUI(msg) {
+  setView("none");
+  document.getElementById("home-discovery-zone").style.display = "block";
+  document.getElementById("error-msg").textContent = msg;
+}
+
+function setView(v) {
+  document.getElementById("loading").style.display       = v === "loading" ? "block" : "none";
+  document.getElementById("list-screen").style.display   = v === "list"    ? "block" : "none";
+  document.getElementById("detail-screen").style.display = v === "detail"  ? "block" : "none";
+}
+
+/* ════════════════════════════════════════════
+   렌더링 엔진 (리스트 및 상세 화면)
+   ════════════════════════════════════════════ */
+function renderList() {
+  setView("list");
+  document.getElementById("list-count").textContent = `총 ${allData.length}건이 발견되었습니다.`;
+  document.getElementById("list-container").innerHTML = allData.map(listItemHTML).join("");
+}
+
+function listItemHTML(item, idx) {
+  const photos     = item["사진"] ? item["사진"].toString().split(",") : [];
+  const firstPhoto = photos.map(p => p.trim()).find(p => p.startsWith("http")) || "";
+  const thumbHTML = firstPhoto
+    ? `<div class="list-thumb" id="lth-${idx}"><img src="${firstPhoto}" onerror="this.parentElement.style.display='none'" loading="lazy"></div>` : "";
+
+  const code = String(item["작품 코드"] || "");
+  const s    = isBookmarked(code);
+  const sub  = [item["표제(원어)"] || "", item["작가(국문)"] || item["작가(원어)"] || item["작가 (원어)"] || "", item["발행연도"] || ""].filter(Boolean).join(" · ");
+
+  return `
+    <div class="result-item" onclick="renderPanel(${idx})">
+      ${thumbHTML}
+      <div class="item-info">
+        <div class="item-title">${item["표제(국문)"] || "-"}</div>
+        <div class="item-sub">${sub}</div>
+      </div>
+      <button class="btn-bm ${s ? "saved" : ""}" data-code="${code}" onclick="toggleBM('${code}', event)" title="${s ? "북마크 해제" : "북마크"}">
+        ${s ? BM_SAVED : BM_EMPTY}
+      </button>
+    </div>`;
+}
+
+function renderPanel(idx) {
+  const d = allData[idx];
+  if (!d) return;
+  document.getElementById("home-discovery-zone").style.display = "none";
+  history.pushState({ view: "detail", idx, keyword: lastKeyword }, "", `?q=${encodeURIComponent(lastKeyword)}&item=${idx}`);
+  setView("detail");
+
+  const photos = d["사진"] ? d["사진"].toString().split(",").map(u => u.trim()).filter(u => u.startsWith("http")) : [];
+  const galleryHTML = photos.length > 0 ? `<div class="gallery-container">${photos.map(url => `<div class="gallery-item"><img src="${url}" onerror="this.closest('.gallery-item').style.display='none'" loading="lazy"></div>`).join("")}</div>` : "";
+
+  const firstEd   = d["초판연도"]      ? String(d["초판연도"]).trim()      : "";
+  const birthYear = d["작가 출생년도"] ? String(d["작가 출생년도"]).trim() : "";
+  const deathYear = d["작가 사망년도"] ? String(d["작가 사망년도"]).trim() : "";
+  let badges = "";
+  if (firstEd) badges += `<span class="meta-badge"><span class="badge-label">작품 초판</span>${firstEd}</span>`;
+  if (birthYear || deathYear) badges += `<span class="meta-badge"><span class="badge-label">작가 생몰년</span>${birthYear && deathYear ? birthYear + " – " + deathYear : birthYear || deathYear}</span>`;
+
+  const size = [d["가로"], d["세로"], d["두께 D"]].filter(v => v).join(" x ");
+  const jong = d["종"] ? `${d["종"]}종` : "";
+  const gwon = d["권"] ? `${d["권"]}권` : "";
+
+  const fields = [
+    ["작품 코드",  d["작품 코드"]],
+    ["작가(국문)", d["작가(국문)"]],
+    ["작가(원어)", d["작가(원어)"] || d["작가 (원어)"]],
+    ["출판사",      d["출판사"]],
+    ["발행연도",    d["발행연도"]],
+    ["크기(가로x세로x두께)", size], 
+    ["소전권서",    d["소전권서"]],
+    ["종/권",       [jong, gwon].filter(v => v).join(", ")], 
+    ["일러스트",    d["일러스트(국문)"]],
+    ["현위치",      d["현위치"]],
+    ["비고",        d["비고"]],
+  ].filter(([, v]) => v && String(v).trim() !== "");
+
+  const code = String(d["작품 코드"] || "");
+  const s    = isBookmarked(code);
+  const descHTML = d["도서 설명"] ? `<div class="detail-desc"><div class="field-label" style="margin-bottom:8px; font-weight:bold; border-bottom:1px solid var(--border); padding-bottom:5px;">도서 설명</div><div>${String(d["도서 설명"]).replace(/\n/g, '<br>')}</div></div>` : "";
+
+  document.getElementById("detail-content").innerHTML = `
+    ${galleryHTML}
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">${d["표제(국문)"] || ""}</div>
+        <div class="detail-title-sub">${d["표제(원어)"] || ""}</div>
+      </div>
+      <button class="btn-bm ${s ? "saved" : ""}" data-code="${code
