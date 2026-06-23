@@ -545,7 +545,7 @@
           <li class="directory-item" onclick="clickSearch('나스메 소세키')">나스메 소세키 (夏目 漱石)</li>
           <li class="directory-item" onclick="clickSearch('루쉰')">루쉰 (魯迅)</li>
           <li class="directory-item" onclick="clickSearch('무라카미 하루키')">무라카미 하루키 (村상 春樹)</li>
-          <li class="directory-item" onclick="clickSearch('무라사키 시키부')">무라사키 시키부 (紫式부)</li>
+          <li class="directory-item" onclick="clickSearch('무라사키 시키부')">무라사키 시키부 (紫식부)</li>
           <li class="directory-item" onclick="clickSearch('미시마 유키오')">미시마 유키오 (三島 由紀夫)</li>
           <li class="directory-item" onclick="clickSearch('박완서')">박완서 (Park wan-seo)</li>
           <li class="directory-item" onclick="clickSearch('아쿠타카와 류노스케')">아쿠타카와 류노스케 (芥川 龍之介)</li>
@@ -662,7 +662,7 @@
           <li class="directory-item" onclick="clickSearch('파르마 수도원')">La Chartreuse de Parme (파르마 수도원)</li>
           <li class="directory-item" onclick="clickSearch('적과 흑')">Le Rouge et le Noir (적과 흑)</li>
           <li class="directory-item" onclick="clickSearch('풀잎')">Leaves of Grass (풀잎)</li>
-          <li class="directory-item" onclick="clickSearch('리시스트라타')">Lysistrata (리시스트라타)</li>
+          <li class="directory-item" onclick="clickSearch('리시스트라타')">Lysistrata (리시스트라ta)</li>
           <li class="directory-item" onclick="clickSearch('라만차의 남자')">L'homme de la Mancha (라만차의 남자)</li>
           <li class="directory-item" onclick="clickSearch('기발한 이달고 라만차의 돈키호테')">L'ingénieux Hidalgo (기발한 이달고 라만차의 돈키호테)</li>
           
@@ -932,6 +932,7 @@ function renderPanel(idx) {
   const jong = d["종"] ? `${d["종"]}종` : "";
   const gwon = d["권"] ? `${d["권"]}권` : "";
 
+  // ★ 일러스트(국문)과 일러스트(원어)를 매핑해 두었습니다.
   const fields = [
     ["작품 코드",  d["작품 코드"]],
     ["작가(국문)", d["작가(국문)"]],
@@ -941,7 +942,8 @@ function renderPanel(idx) {
     ["크기(가로x세로x두께)", size],
     ["소전권서",    d["소전권서"]],
     ["종/권",       [jong, gwon].filter(v => v).join(", ")],
-    ["일러스트",    d["일러스트(국문)"]],
+    ["일러스트(국문)", d["일러스트(국문)"]],
+    ["일러스트(원어)", d["일러스트(원어)"]],
     ["현위치",      d["현위치"]],
     ["비고",        d["비고"]],
   ].filter(([, v]) => v && String(v).trim() !== "");
