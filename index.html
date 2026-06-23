@@ -144,7 +144,7 @@
       border-color: var(--gold);
     }
 
-    /* 알파벳 그룹용 서브 헤더 스타일 (수정됨) */
+    /* 알파벳 그룹용 서브 헤더 스타일 */
     .alphabet-group {
       grid-column: 1 / -1;
       font-size: 14px;
@@ -152,6 +152,14 @@
       color: var(--gold);
       margin: 14px 0 4px 2px;
       list-style: none;
+    }
+
+    /* 데이터가 없을 때 가이드 텍스트 */
+    .directory-empty-info {
+      font-size: 12px;
+      color: var(--sub);
+      padding: 4px 12px;
+      font-style: italic;
     }
 
     /* ── Loading ── */
@@ -370,17 +378,6 @@
     .empty-state .e-icon { margin-bottom: 14px; opacity: 0.45; }
     .empty-state p { font-size: 14px; line-height: 1.7; }
 
-    /* ── Footer ── */
-    footer {
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      text-align: center;
-      padding: 16px 20px;
-      font-size: 12px;
-      color: var(--sub);
-      letter-spacing: 2px;
-      margin-top: 40px;
-    }
   </style>
 </head>
 <body>
@@ -390,25 +387,22 @@
 </header>
 
 <div class="nav-tabs">
-  <div class="nav-tabs">
-    <div class="nav-tab active" id="tab-search" onclick="switchTab('search')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      검색
-    </div>
-    <div class="nav-tab" id="tab-bm" onclick="switchTab('bookmarks')">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-      </svg>
-      북마크
-    </div>
+  <div class="nav-tab active" id="tab-search" onclick="switchTab('search')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    검색
+  </div>
+  <div class="nav-tab" id="tab-bm" onclick="switchTab('bookmarks')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+    </svg>
+    북마크
   </div>
 </div>
 
 <div id="app">
 
-  <!-- 검색 탭 -->
   <div id="search-tab">
     <div class="search-wrap">
       <div class="search-box">
@@ -419,7 +413,6 @@
       <div id="error-msg"></div>
     </div>
 
-    <!-- 메인 초기 화면: 고정 데이터 초고속 디렉토리 리스트 -->
     <div id="main-directory" class="main-directory">
       <div class="directory-section">
         <div class="directory-title">작가 리스트 (A-Z순)</div>
@@ -432,6 +425,9 @@
           <li class="directory-item" onclick="clickSearch('Aristophanes')">Aristophanes (아리스토파네스)</li>
           <li class="directory-item" onclick="clickSearch('Arthur Rackham')">Arthur Rackham (아서 래컴)</li>
           
+          <li class="alphabet-group">B</li>
+          <li class="directory-item" onclick="clickSearch('Ben Shahn')">Ben Shahn (벤 샨)</li>
+
           <li class="alphabet-group">C</li>
           <li class="directory-item" onclick="clickSearch('Charles Baudelaire')">Charles Baudelaire (샤를 보들레르)</li>
           <li class="directory-item" onclick="clickSearch('Charles Dickens')">Charles Dickens (찰스 디킨스)</li>
@@ -501,12 +497,18 @@
           <li class="directory-item" onclick="clickSearch('Molière')">Molière (몰리에르)</li>
           <li class="directory-item" onclick="clickSearch('Murakami Haruki')">Murakami Haruki (무라카미 하루키)</li>
           
+          <li class="alphabet-group">N</li>
+          <li class="directory-empty-info">등록된 작가가 없습니다.</li>
+
           <li class="alphabet-group">O</li>
           <li class="directory-item" onclick="clickSearch('Oscar Wilde')">Oscar Wilde (오스카 와일드)</li>
           
           <li class="alphabet-group">P</li>
           <li class="directory-item" onclick="clickSearch('Percy Bysshe Shelley')">Percy Bysshe Shelley (퍼시 비시 셸리)</li>
           
+          <li class="alphabet-group">Q</li>
+          <li class="directory-empty-info">등록된 작가가 없습니다.</li>
+
           <li class="alphabet-group">R</li>
           <li class="directory-item" onclick="clickSearch('Riva Castleman')">Riva Castleman (리바 캐슬먼)</li>
           
@@ -520,6 +522,9 @@
           <li class="directory-item" onclick="clickSearch('Thomas Mann')">Thomas Mann (토마스 만)</li>
           <li class="directory-item" onclick="clickSearch('Thomas Pynchon')">Thomas Pynchon (토머스 핀천)</li>
           
+          <li class="alphabet-group">U</li>
+          <li class="directory-empty-info">등록된 작가가 없습니다.</li>
+
           <li class="alphabet-group">V</li>
           <li class="directory-item" onclick="clickSearch('Vergilius')">Vergilius (베르길리우스)</li>
           <li class="directory-item" onclick="clickSearch('Victor Hugo')">Victor Hugo (빅토르 위고)</li>
@@ -532,12 +537,15 @@
           <li class="directory-item" onclick="clickSearch('William Shakespeare')">William Shakespeare (윌리엄 셰익스피어)</li>
           <li class="directory-item" onclick="clickSearch('William Wordsworth')">William Wordsworth (윌리엄 워즈워스)</li>
           
+          <li class="alphabet-group">X / Y / Z</li>
+          <li class="directory-empty-info">등록된 작가가 없습니다.</li>
+
           <li class="alphabet-group">국문 작가</li>
           <li class="directory-item" onclick="clickSearch('가와바타 야스나리')">가와바타 야스나리 (川端康成)</li>
           <li class="directory-item" onclick="clickSearch('나스메 소세키')">나스메 소세키 (夏目 漱石)</li>
           <li class="directory-item" onclick="clickSearch('루쉰')">루쉰 (魯迅)</li>
           <li class="directory-item" onclick="clickSearch('무라카미 하루키')">무라카미 하루키 (村상 春樹)</li>
-          <li class="directory-item" onclick="clickSearch('무라사키 시키부')">무라사키 시키부 (紫式部)</li>
+          <li class="directory-item" onclick="clickSearch('무라사키 시키부')">무라사키 시키부 (紫式부)</li>
           <li class="directory-item" onclick="clickSearch('미시마 유키오')">미시마 유키오 (三島 由紀夫)</li>
           <li class="directory-item" onclick="clickSearch('박완서')">박완서 (Park wan-seo)</li>
           <li class="directory-item" onclick="clickSearch('아쿠타카와 류노스케')">아쿠타카와 류노스케 (芥川 龍之介)</li>
@@ -553,7 +561,6 @@
       <div class="directory-section">
         <div class="directory-title">작품명 리스트 (A-Z순)</div>
         <ul class="directory-list">
-          <!-- A 그룹 -->
           <li class="alphabet-group">A</li>
           <li class="directory-item" onclick="clickSearch('이별')">Adieu (이별)</li>
           <li class="directory-item" onclick="clickSearch('앨리스 앨범')">Album für Alice (앨리스 앨범)</li>
@@ -565,7 +572,6 @@
           <li class="directory-item" onclick="clickSearch('미국에서')">Aux Etats-Unis d'Amerique (미국에서)</li>
           <li class="directory-item" onclick="clickSearch('꽃 핀 소녀들의 그늘에서')">À l'ombre des jeunes filles en fleurs (꽃 핀 소녀들의 그늘에서)</li>
           
-          <!-- B -->
           <li class="alphabet-group">B</li>
           <li class="directory-item" onclick="clickSearch('바베트의 만찬')">Babette's Feast (바베트의 만찬)</li>
           <li class="directory-item" onclick="clickSearch('필경사 바틀비')">Bartleby, the Scrivener (필경사 바틀비)</li>
@@ -576,7 +582,6 @@
           <li class="directory-item" onclick="clickSearch('신부와 갈매기')">Brideship and Gulls (신부와 갈매기)</li>
           <li class="directory-item" onclick="clickSearch('빌러비드')">Beloved (빌러비드)</li>
           
-          <!-- C -->
           <li class="alphabet-group">C</li>
           <li class="directory-item" onclick="clickSearch('캉디드 혹은 낙관주의')">Candide ou l'Optimisme (캉디드 혹은 낙관주의)</li>
           <li class="directory-item" onclick="clickSearch('아가')">Cantique des Cantiques (아가)</li>
@@ -585,16 +590,15 @@
           <li class="directory-item" onclick="clickSearch('동반자')">Company (동반자)</li>
           <li class="directory-item" onclick="clickSearch('명상')">Contemplación (명상)</li>
           
-          <!-- D -->
           <li class="alphabet-group">D</li>
           <li class="directory-item" onclick="clickSearch('데카메론')">Decameron (데카메론)</li>
-          <div class="directory-item" onclick="clickSearch('데미안(초판본)')">Demian (데미안(초판본))</div>
+          <li class="directory-item" onclick="clickSearch('데미안(초판본)')">Demian (데미안(초판본))</li>
           <li class="directory-item" onclick="clickSearch('세일즈맨의 죽음')">Death of a Salesman (세일즈맨의 죽음)</li>
           <li class="directory-item" onclick="clickSearch('어느 투쟁의 기록')">Description d'un combat (어느 투쟁의 기록)</li>
           <li class="directory-item" onclick="clickSearch('신곡')">Divina Commedia / The Divine Comedy (신곡)</li>
           <li class="directory-item" onclick="clickSearch('라만차의 돈키호테')">Don Quixote de la Mancha (라만차의 돈키호테)</li>
-          
-          <!-- E -->
+          <li class="directory-item" onclick="clickSearch('더블린 사람들')">The Dubliners (더블린 사람들)</li>
+
           <li class="alphabet-group">E</li>
           <li class="directory-item" onclick="clickSearch('보르헤스 시집')">Ein Buch (보르헤스 시집)</li>
           <li class="directory-item" onclick="clickSearch('금서로 출판된 책의 서문')">Epigraphe pour un Livre Condamne (금서로 출판된 책의 서문)</li>
@@ -603,7 +607,6 @@
           <li class="directory-item" onclick="clickSearch('몽테뉴의 수상록')">Essays of Michel de Montaigne (몽테뉴의 수상록)</li>
           <li class="directory-item" onclick="clickSearch('에드거 앨런 포 단편 소설 모음집')">Erzählungen in zwei Bänden (에드거 앨런 포 단편 소설 모음집)</li>
           
-          <!-- F -->
           <li class="alphabet-group">F</li>
           <li class="directory-item" onclick="clickSearch('라 퐁텐 우화')">Fables de la Fontaine (라 퐁텐 우화)</li>
           <li class="directory-item" onclick="clickSearch('파우스트')">Faust (파우스트)</li>
@@ -614,14 +617,12 @@
           <li class="directory-item" onclick="clickSearch('핀 호텔')">Finn's Hotel (핀 호텔)</li>
           <li class="directory-item" onclick="clickSearch('푸아라드(피즐즈)')">Foirades (푸아라드(피즐즈))</li>
           
-          <!-- G -->
           <li class="alphabet-group">G</li>
           <li class="directory-item" onclick="clickSearch('자코모 조이스')">Giacomo Joyce (자코모 조이스)</li>
           <li class="directory-item" onclick="clickSearch('고도를 기다리며')">Godot (고도를 기다리며)</li>
           <li class="directory-item" onclick="clickSearch('위대한 유산')">Great Expectations (위대한 유산)</li>
           <li class="directory-item" onclick="clickSearch('걸리버 여행기')">Gulliver's Travels (걸리버 여행기)</li>
           
-          <!-- H -->
           <li class="alphabet-group">H</li>
           <li class="directory-item" onclick="clickSearch('햄릿, 덴마크의 왕자')">Hamlet, Prince of Denmark (햄릿, 덴마크의 왕자)</li>
           <li class="directory-item" onclick="clickSearch('햄릿')">Hamlet (햄릿)</li>
@@ -633,7 +634,6 @@
           <li class="directory-item" onclick="clickSearch('라만차의 감탄할 만한 돈키호테의 이야기')">Histoire de l'admirable Don Quichotte (라만차의 감탄할 만한 돈키호테의 이야기)</li>
           <li class="directory-item" onclick="clickSearch('감탄할 만한 돈키호테의 이야기')">Histoire Admirable Don Quichotte (감탄할 만한 돈키호테의 이야기)</li>
           
-          <!-- I -->
           <li class="alphabet-group">I</li>
           <li class="directory-item" onclick="clickSearch('일리아스')">Iliade / L'Iliade (일리아스)</li>
           <li class="directory-item" onclick="clickSearch('일리아드와 오디세이')">L'Illiade et l'Odyssée (일리아드와 오디세이)</li>
@@ -643,16 +643,16 @@
           <li class="directory-item" onclick="clickSearch('각성')">In ecstasy (각성)</li>
           <li class="directory-item" onclick="clickSearch('이르마 붐의 도서 목록')">Irma Boom. Book Manifest (이르마 붐의 도서 목록)</li>
           
-          <!-- J -->
-          <li class="alphabet-group">J / K</li>
+          <li class="alphabet-group">J</li>
           <li class="directory-item" onclick="clickSearch('운명론자 자크와 그의 주인')">Jacques le Fataliste (운명론자 자크와 그의 주인)</li>
           <li class="directory-item" onclick="clickSearch('장 폴 사르트르 소설 작품집')">Jean-Paul Sartre Oeuvres (장 폴 사르트르 소설 작품집)</li>
           <li class="directory-item" onclick="clickSearch('독서에 관하여')">Journées de lecture (독서에 관하여)</li>
           <li class="directory-item" onclick="clickSearch('조이스 이미지')">Joyce Images (조이스 이미지)</li>
+
+          <li class="alphabet-group">K</li>
           <li class="directory-item" onclick="clickSearch('해변의 카프카')">Kafka on the Shore (해변의 카프카)</li>
           <li class="directory-item" onclick="clickSearch('카프카 15개의 우표')">Kafka Quinze Estampes (카프카 15개의 우표)</li>
           
-          <!-- L -->
           <li class="alphabet-group">L</li>
           <li class="directory-item" onclick="clickSearch('평화')">La Paix(The Peace) (평화)</li>
           <li class="directory-item" onclick="clickSearch('금지')">L'Interdiction (금지)</li>
@@ -666,23 +666,23 @@
           <li class="directory-item" onclick="clickSearch('라만차의 남자')">L'homme de la Mancha (라만차의 남자)</li>
           <li class="directory-item" onclick="clickSearch('기발한 이달고 라만차의 돈키호테')">L'ingénieux Hidalgo (기발한 이달고 라만차의 돈키호테)</li>
           
-          <!-- M -->
-          <li class="alphabet-group">M / N</li>
+          <li class="alphabet-group">M</li>
           <li class="directory-item" onclick="clickSearch('맥베스')">Macbeth (맥베스)</li>
           <li class="directory-item" onclick="clickSearch('마담 보바리')">Madame Bovary (마담 보바리)</li>
           <li class="directory-item" onclick="clickSearch('변신과 그 외의 이야기들')">Metamorphosis and Other Stories / Metamorfosis (변신과 그 외의 이야기들)</li>
           <li class="directory-item" onclick="clickSearch('변신')">La Metamorfosis / La Métamorphose (변신)</li>
           <li class="directory-item" onclick="clickSearch('믹, 닉과 매기의 마임')">Mime of Mick, Nick and the Maggies (믹, 닉과 매기의 마임)</li>
           <li class="directory-item" onclick="clickSearch('모비 딕')">Moby-Dick (모비 딕)</li>
+
+          <li class="alphabet-group">N</li>
           <li class="directory-item" onclick="clickSearch('나나')">Nama (나나)</li>
           <li class="directory-item" onclick="clickSearch('노하우 온')">Nohow On (노하우 온)</li>
           <li class="directory-item" onclick="clickSearch('노르웨이의 숲')">Norwegian Wood (노르웨이의 숲)</li>
           
-          <!-- O -->
-          <li class="alphabet-group">O / P / Q</li>
-          <li class="directory-item" onclick="clickSearch('오디세이아')">The Odyssey (오디세이아)</li>
-          <li class="directory-item" onclick="clickSearch('에드거 앨런 포의 상상력 넘치고 시적인 작품 전집')">Oeuvres (에드거 앨런 포의 상상력 넘치고 시적인 작품 전집)</li>
+          <li class="alphabet-group">O</li>
           <li class="directory-item" onclick="clickSearch('백년의 고독')">One Hundred Years of Solitude (백년의 고독)</li>
+
+          <li class="alphabet-group">P</li>
           <li class="directory-item" onclick="clickSearch('우화와 역설')">Parables and Paradoxes (우화와 역설)</li>
           <li class="directory-item" onclick="clickSearch('실낙원')">Paradis Perdu (실낙원)</li>
           <li class="directory-item" onclick="clickSearch('페드르와 이폴리트')">Phedre et Hippolyte (페드르와 이폴리트)</li>
@@ -691,9 +691,13 @@
           <li class="directory-item" onclick="clickSearch('포세이돈')">Poseidon (포세이돈)</li>
           <li class="directory-item" onclick="clickSearch('결박된 프로메테우스 & 해방된 프로메테우스')">Prometheus Bound & Unbound (결박된 프로메테우스 & 해방된 프로메테우스)</li>
           
-          <!-- R -->
-          <li class="alphabet-group">R / S</li>
+          <li class="alphabet-group">Q</li>
+          <li class="directory-empty-info">등록된 작품이 없습니다.</li>
+
+          <li class="alphabet-group">R</li>
           <li class="directory-item" onclick="clickSearch('로미오와 줄리엣')">Romeo and Juliet / Romeo e Giulietta (로미오와 줄리엣)</li>
+          
+          <li class="alphabet-group">S</li>
           <li class="directory-item" onclick="clickSearch('살로메')">Salome (살로메)</li>
           <li class="directory-item" onclick="clickSearch('살로메: 1막의 비극')">Salome: A Tragedy In One Act (살로메: 1막의 비극)</li>
           <li class="directory-item" onclick="clickSearch('셰익스피어 글방')">Shakespeare and Company (셰익스피어 글방)</li>
@@ -701,23 +705,29 @@
           <li class="directory-item" onclick="clickSearch('설국')">Snow Country (설국)</li>
           <li class="directory-item" onclick="clickSearch('스완네 집 쪽으로')">Swann's Way (스완네 집 쪽으로)</li>
           
-          <!-- T -->
-          <li class="alphabet-group">T / U</li>
+          <li class="alphabet-group">T</li>
           <li class="directory-item" onclick="clickSearch('미스터리와 상상의 이야기')">Tales of Mystery and Imagination (미스터리와 상상의 이야기)</li>
           <li class="directory-item" onclick="clickSearch('장미의 이름')">The Name of the Rose (장미의 이름)</li>
           <li class="directory-item" onclick="clickSearch('달과 6펜스')">The Moon and Sixpence (달과 6펜스)</li>
           <li class="directory-item" onclick="clickSearch('태엽 감는 새 연대기')">The Wind-Up Bird Chronicle (태엽 감는 새 연대기)</li>
           <li class="directory-item" onclick="clickSearch('노인과 바다')">The Old Man and the Sea (노인과 바다)</li>
+          <li class="directory-item" onclick="clickSearch('오디세이아')">The Odyssey (오디세이아)</li>
+          <li class="directory-item" onclick="clickSearch('에드거 앨런 포의 상상력 넘치고 시적인 작품 전집')">Oeuvres (에드거 앨런 포의 상상력 넘치고 시적인 작품 전집)</li>
           <li class="directory-item" onclick="clickSearch('거울 나라의 앨리스')">Through the Looking-Glass (거울 나라의 앨리스)</li>
           <li class="directory-item" onclick="clickSearch('세 가지 이야기')">Three Tales (세 가지 이야기)</li>
-          <div class="directory-item" onclick="clickSearch('코드 트리')">Tree of Codes (코드 트리)</div>
+          <li class="directory-item" onclick="clickSearch('코드 트리')">Tree of Codes (코드 트리)</li>
+          
+          <li class="alphabet-group">U</li>
           <li class="directory-item" onclick="clickSearch('율리시스')">Ulysses (율리시스)</li>
           
-          <!-- V / W / 기타 한글 표제 데이터 -->
-          <li class="alphabet-group">V / W / 국문 전용</li>
+          <li class="alphabet-group">V</li>
           <li class="directory-item" onclick="clickSearch('비너스와 아도니스')">Venus and Adonis / Venus & Adonis (비너스와 아도니스)</li>
           <li class="directory-item" onclick="clickSearch('욕망을 주제로 한 22개의 그림')">Vingt-deux dessins (욕망을 주제로 한 22개의 그림)</li>
+
+          <li class="alphabet-group">W</li>
           <li class="directory-item" onclick="clickSearch('전쟁과 평화')">War and Peace (전쟁과 평화)</li>
+          
+          <li class="alphabet-group">X / Y / Z / 국문 전용</li>
           <li class="directory-item" onclick="clickSearch('나목')">나목 (裸木)</li>
           <li class="directory-item" onclick="clickSearch('무정')">무정 (無情)</li>
           <li class="directory-item" onclick="clickSearch('백록담(초판본)')">백록담(초판본) (白鹿潭)</li>
@@ -742,7 +752,6 @@
     </div>
   </div>
 
-  <!-- 북마크 탭 -->
   <div id="bookmark-screen">
     <div class="bm-header">
       <span class="bm-count" id="bm-count"></span>
