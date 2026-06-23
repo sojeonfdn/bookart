@@ -824,7 +824,7 @@ function goHome() {
   document.getElementById("error-msg").textContent = "";
   allData = [];
   lastKeyword = "";
-  history.pushState({}, "", window.location.pathname);
+  history.pushState({ view: "main" }, "", window.location.pathname);
   switchTab('search');
   setView("none"); 
 }
@@ -904,9 +904,7 @@ function listItemHTML(item, idx) {
     </div>`;
 }
 
-/* ════════════════════════════════════════════
-   상세 렌더
-   ════════════════════════════════════════════ */
+/* ── 상세 렌더 ── */
 function renderPanel(idx) {
   const d = allData[idx];
   if (!d) return;
@@ -982,13 +980,33 @@ function renderPanel(idx) {
 
 function goBack() { history.back(); }
 
+/* 브라우저 뒤로가기 상태 비동기 싱크 완벽 복구 */
 window.addEventListener("popstate", async (e) => {
+  const p = new URLSearchParams(window.location.search);
+  const q = p.get("q");
+  const item = p.get("item");
+
+  // 1. 만약 URL 파라미터에 q가 없다면 무조건 완전 초기 메인 디렉토리로 원복
+  if (!q) {
+    document.getElementById("keyword").value = "";
+    allData = [];
+    lastKeyword = "";
+    setView("none");
+    return;
+  }
+
+  // 2. URL 파라미터가 유효한데 내부 변수가 비었다면 다시 패치 후 연동 처리
   const st = e.state;
-  if (!st) { setView("none"); return; }
-  if (st.view === "list") { setView("none"); renderList(); }
-  else if (st.view === "detail") {
-    if (!allData.length && st.keyword) await fetchAndRender(st.keyword, st.idx);
-    else renderPanel(st.idx);
+  if (!allData.length && q) {
+    await fetchAndRender(q, item !== null ? parseInt(item) : null);
+    return;
+  }
+
+  // 3. 내부 데이터 상태값 유무에 따라 안전하게 화면만 가공 렌더링
+  if (st && st.view === "detail") {
+    renderPanel(st.idx);
+  } else {
+    renderList();
   }
 });
 
@@ -1042,8 +1060,13 @@ async function fetchAndRender(keyword, itemIdx) {
 (function init() {
   const p = new URLSearchParams(window.location.search);
   const q = p.get("q"), item = p.get("item");
-  if (q) { document.getElementById("keyword").value = q; fetchAndRender(q, item !== null ? parseInt(item) : null); }
-  else { setView("none"); }
+  if (q) {
+    document.getElementById("keyword").value = q;
+    fetchAndRender(q, item !== null ? parseInt(item) : null);
+  } else {
+    history.replaceState({ view: "main" }, "", window.location.pathname);
+    setView("none");
+  }
 })();
 </script>
 </body>
