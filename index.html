@@ -105,7 +105,7 @@
     .btn-search:hover { background: #a88530; }
     #error-msg { color: var(--red); font-size: 11px; margin-top: 5px; text-align: center; }
 
-    /* ── [개선] A-Z 순 (한글 병기) 작가 리스트 디렉토리 스타일 ── */
+    /* ── 자동 실시간 연동 작가 명단 섹션 ── */
     .artist-directory {
       margin-top: 30px;
       background: rgba(255, 255, 255, 0.4);
@@ -396,44 +396,17 @@
       <div id="error-msg"></div>
     </div>
 
-    <div id="home-discovery-zone">
+    <div id="home-discovery-zone" style="display:none;">
       <div class="artist-directory">
         <h3 class="directory-title">작가 명단 (A-Z순 / 한글 병기)</h3>
-        
-        <div class="directory-group">
-          <div class="group-label">B</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('보나르')">Bonnard, Pierre (피에르 보나르)</span>
+        <div id="directory-content-box">
           </div>
-        </div>
-
-        <div class="directory-group">
-          <div class="group-label">D</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('달리')">Dalí, Salvador (살바도르 달리)</span>
-          </div>
-        </div>
-
-        <div class="directory-group">
-          <div class="group-label">M</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('마티스')">Matisse, Henri (앙리 마티스)</span>
-          </div>
-        </div>
-
-        <div class="directory-group">
-          <div class="group-label">P</div>
-          <div class="artist-list">
-            <span class="artist-item" onclick="clickArtist('피카소')">Picasso, Pablo (파블로 피카소)</span>
-          </div>
-        </div>
-        
-        </div>
+      </div>
     </div>
 
     <div id="loading">
       <div class="spinner"></div>
-      <p>검색 중…</p>
+      <p id="loading-text">데이터를 동기화하는 중입니다…</p>
     </div>
 
     <div id="list-screen">
@@ -465,15 +438,160 @@
    ════════════════════════════════════════════ */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxak15K6mN0VaNedvPzBHgTYCt4oXUPEwsvYHC_OyXRBs8NnNgQtUoOK1P5UJQ8vO2G/exec";
 
-/* ── 상태 관리 ── */
-let allData     = [];
-let lastKeyword = "";
+/* ── 상태 마스터 관리 ── */
+let masterDatabase = []; // 구글 시트에서 한 번에 긁어온 원본 전체 보관소
+let allData        = []; // 현재 화면 목록에 바인딩된 결과 데이터
+let lastKeyword    = "";
 
 const BM_EMPTY = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`;
 const BM_SAVED = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`;
 
 /* ════════════════════════════════════════════
-   북마크 기능 로직 (복원 완동 보장)
+   [핵심 기능] 첫 글자 영문 이니셜 추출 (A-Z분류용)
+   ════════════════════════════════════════════ */
+function getFirstAlphabetLetter(item) {
+  // 원어 이름 우선순위로 알파벳 이니셜 그룹화 시도, 없으면 국문 이름 기준
+  let name = item["작가(원어)"] || item["작가 (원어)"] || item["작가(국문)"] || "";
+  name = name.trim().replace(/['"\[\]]/g, ""); // 노이즈 제거
+  if(!name) return "ETC";
+  
+  const first = name.charAt(0).toUpperCase();
+  if(first >= "A" && first <= "Z") return first;
+  
+  // 만약 국문으로 시작한다면 한글 첫 자소로 임시 대응 (예외 방지)
+  return "A-Z 리스트";
+}
+
+/* ════════════════════════════════════════════
+   [핵심 복원] 무중단 전체 동기화 및 디렉토리 자동 생성
+   ════════════════════════════════════════════ */
+async function syncDatabaseAndBuildDirectory() {
+  setView("loading");
+  document.getElementById("loading-text").textContent = "데이터베이스를 불러오는 중입니다…";
+  
+  try {
+    // 공백 하나(" ")를 전송하여 구글 시트에서 전체 데이터를 최초 1회 완전히 긁어옵니다.
+    const res = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(" ")}`);
+    const json = await res.json();
+    
+    if (json.found && json.data.length) {
+      masterDatabase = json.data;
+      
+      // 작가 기준 중복 제거 및 포맷팅 (원어 이름 + 국문 한글 병기 처리)
+      const artistMap = new Map();
+      masterDatabase.forEach(item => {
+        const koName = (item["작가(국문)"] || "").trim();
+        const enName = (item["작가(원어)"] || item["작가 (원어)"] || "").trim();
+        
+        if (enName || koName) {
+          // '영문이름 (국문이름)' 조합을 키값으로 설정해 고유 보관
+          const displayFormat = enName && koName ? `${enName} (${koName})` : (enName || koName);
+          // 검색용 키워드는 국문 이름 우선 매칭
+          artistMap.set(displayFormat, koName || enName);
+        }
+      });
+
+      // 영문 알파벳 이니셜 순 정렬 조립
+      const groups = {};
+      artistMap.forEach((searchVal, displayKey) => {
+        const firstLetter = displayKey.charAt(0).toUpperCase();
+        const letterGroup = (firstLetter >= "A" && firstLetter <= "Z") ? firstLetter : "기타 작가 명단";
+        
+        if (!groups[letterGroup]) groups[letterGroup] = [];
+        groups[letterGroup].push({ key: displayKey, search: searchVal });
+      });
+
+      // 알파벳 딕셔너리 순 정렬
+      const sortedLetters = Object.keys(groups).sort();
+      
+      const htmlContent = sortedLetters.map(letter => {
+        // 그룹 내 개별 작가 정렬
+        groups[letter].sort((a, b) => a.key.localeCompare(b.key));
+        
+        return `
+          <div class="directory-group">
+            <div class="group-label">${letter}</div>
+            <div class="artist-list">
+              ${groups[letter].map(art => `<span class="artist-item" onclick="clickArtist('${art.search}')">${art.key}</span>`).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("directory-content-box").innerHTML = htmlContent;
+      setView("none");
+      document.getElementById("home-discovery-zone").style.display = "block";
+    } else {
+      throw new Error();
+    }
+  } catch(e) {
+    setView("none");
+    document.getElementById("directory-content-box").innerHTML = `<p style="text-align:center; font-size:13px; color:var(--red);">연동 실패. 페이지를 다시 열거나 새로고침 해주세요.</p>`;
+    document.getElementById("home-discovery-zone").style.display = "block";
+  }
+}
+
+/* ════════════════════════════════════════════
+   작가 누르면 0초 만에 인메모리 정밀 필터링 작동
+   ════════════════════════════════════════════ */
+function clickArtist(artistName) {
+  document.getElementById("keyword").value = artistName;
+  document.getElementById("error-msg").textContent = "";
+  
+  const searchKey = artistName.toLowerCase().trim();
+  
+  // 마스터베이스에서 즉각 추출
+  allData = masterDatabase.filter(item => {
+    const targetKo = String(item["작가(국문)"] || "").toLowerCase();
+    const targetEn = String(item["작가(원어)"] || item["작가 (원어)"] || "").toLowerCase();
+    return targetKo.includes(searchKey) || targetEn.includes(searchKey);
+  });
+
+  document.getElementById("home-discovery-zone").style.display = "none";
+  lastKeyword = artistName;
+  history.pushState({ view: "list", keyword: artistName }, "", `?q=${encodeURIComponent(artistName)}`);
+  renderList();
+}
+
+/* ════════════════════════════════════════════
+   소전권서/도서 설명 100% 서치 통합 검색엔진 (doSearch)
+   ════════════════════════════════════════════ */
+function doSearch() {
+  const keyword = document.getElementById("keyword").value.trim();
+  if (!keyword) { document.getElementById("error-msg").textContent = "검색어를 입력하세요."; return; }
+  document.getElementById("error-msg").textContent = "";
+  
+  const searchKey = keyword.toLowerCase();
+  
+  // 구글 시트 전체가 메모리에 확보되어 있으므로, 딜레이 없이 도서설명/소전권서까지 2차 전수 탐색을 수행합니다.
+  allData = masterDatabase.filter(item => {
+    const code  = String(item["작품 코드"] || "").toLowerCase();
+    const titleKo = String(item["표제(국문)"] || "").toLowerCase();
+    const titleEn = String(item["표제(원어)"] || "").toLowerCase();
+    const artistKo = String(item["작가(국문)"] || "").toLowerCase();
+    const artistEn = String(item["작가(원어)"] || item["작가 (원어)"] || "").toLowerCase();
+    const desc  = String(item["도서 설명"] || "").toLowerCase();
+    const classify = String(item["소전권서"] || "").toLowerCase();
+
+    return code.includes(searchKey) || titleKo.includes(searchKey) || titleEn.includes(searchKey) || 
+           artistKo.includes(searchKey) || artistEn.includes(searchKey) || desc.includes(searchKey) || classify.includes(searchKey);
+  });
+
+  if (allData.length === 0) {
+    document.getElementById("error-msg").textContent = "검색 결과가 없습니다.";
+    setView("none");
+    document.getElementById("home-discovery-zone").style.display = "block";
+    return;
+  }
+
+  document.getElementById("home-discovery-zone").style.display = "none";
+  lastKeyword = keyword;
+  history.pushState({ view: "list", keyword }, "", `?q=${encodeURIComponent(keyword)}`);
+  renderList();
+}
+
+/* ════════════════════════════════════════════
+   북마크 저장 및 화면 유기 연동 (완벽 작동 보장)
    ════════════════════════════════════════════ */
 function getBMs()           { try { return JSON.parse(localStorage.getItem("bookart_bm") || "{}"); } catch { return {}; } }
 function saveBMs(obj)       { localStorage.setItem("bookart_bm", JSON.stringify(obj)); }
@@ -485,7 +603,7 @@ function toggleBM(code, e) {
   if (bms[key]) {
     delete bms[key];
   } else {
-    const item = allData.find(i => String(i["작품 코드"]) === key);
+    const item = masterDatabase.find(i => String(i["작품 코드"]) === key) || allData.find(i => String(i["작품 코드"]) === key);
     if (item) bms[key] = item;
   }
   saveBMs(bms);
@@ -503,7 +621,7 @@ function clearBookmarks() {
   renderBMScreen();
 }
 
-/* ── 화면 전환 탭 제어 ── */
+/* ── UI 화면 전환 제어 ── */
 function switchTab(tab) {
   const s = tab === "search";
   document.getElementById("tab-search").classList.toggle("active", s);
@@ -513,7 +631,6 @@ function switchTab(tab) {
   if (!s) renderBMScreen();
 }
 
-/* ── 홈 버튼 초기화 ── */
 function goHome() {
   document.getElementById("keyword").value = "";
   document.getElementById("error-msg").textContent = "";
@@ -525,85 +642,12 @@ function goHome() {
   document.getElementById("home-discovery-zone").style.display = "block";
 }
 
-/* ── 작가 디렉토리 링크 연동 클릭 함수 ── */
-function clickArtist(name) {
-  document.getElementById("keyword").value = name;
-  doSearch();
-}
-
-/* ════════════════════════════════════════════
-   소전권서 및 설명 다중 필터 전면 검색 (doSearch)
-   ════════════════════════════════════════════ */
-async function doSearch() {
-  const keyword = document.getElementById("keyword").value.trim();
-  if (!keyword) { document.getElementById("error-msg").textContent = "검색어를 입력하세요."; return; }
-  document.getElementById("error-msg").textContent = "";
-  
-  document.getElementById("home-discovery-zone").style.display = "none";
-  setView("loading");
-  
-  try {
-    // 1차 검색 요청 시도
-    let res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
-    let json = await res.json();
-    
-    // 만약 구글 시트 백엔드가 '소전권서'나 '설명' 텍스트를 인지 못 해 결과가 비어 있다면,
-    // 전체 범위를 우회 탐색하기 위해 공백을 보낸 후 2차 전수 필터 처리를 진행합니다.
-    if (!json.found || !json.data.length) {
-      const fallbackRes = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(" ")}`);
-      json = await fallbackRes.json();
-    }
-
-    if (!json.found || !json.data.length) {
-      showErrorUI("검색 결과가 없습니다.");
-      return;
-    }
-
-    const searchKey = keyword.toLowerCase();
-
-    // 브라우저 단에서 소전권서, 도서 설명 필드 매칭을 샅샅이 대조합니다.
-    const filtered = json.data.filter(item => {
-      const code  = String(item["작품 코드"] || "").toLowerCase();
-      const titleKo = String(item["표제(국문)"] || "").toLowerCase();
-      const titleEn = String(item["표제(원어)"] || "").toLowerCase();
-      const artistKo = String(item["작가(국문)"] || "").toLowerCase();
-      const artistEn = String(item["작가(원어)"] || item["작가 (원어)"] || "").toLowerCase();
-      const desc  = String(item["도서 설명"] || "").toLowerCase();
-      const classify = String(item["소전권서"] || "").toLowerCase();
-
-      return code.includes(searchKey) || titleKo.includes(searchKey) || titleEn.includes(searchKey) || 
-             artistKo.includes(searchKey) || artistEn.includes(searchKey) || desc.includes(searchKey) || classify.includes(searchKey);
-    });
-
-    if (filtered.length === 0) {
-      showErrorUI("검색 결과가 없습니다.");
-      return;
-    }
-
-    allData     = filtered;
-    lastKeyword = keyword;
-    history.pushState({ view: "list", keyword }, "", `?q=${encodeURIComponent(keyword)}`);
-    renderList();
-  } catch {
-    showErrorUI("서버 통신 중 오류가 발생했습니다.");
-  }
-}
-
-function showErrorUI(msg) {
-  setView("none");
-  document.getElementById("home-discovery-zone").style.display = "block";
-  document.getElementById("error-msg").textContent = msg;
-}
-
 function setView(v) {
   document.getElementById("loading").style.display       = v === "loading" ? "block" : "none";
   document.getElementById("list-screen").style.display   = v === "list"    ? "block" : "none";
   document.getElementById("detail-screen").style.display = v === "detail"  ? "block" : "none";
 }
 
-/* ════════════════════════════════════════════
-   렌더링 엔진 (리스트 및 상세 화면)
-   ════════════════════════════════════════════ */
 function renderList() {
   setView("list");
   document.getElementById("list-count").textContent = `총 ${allData.length}건이 발견되었습니다.`;
@@ -654,29 +698,4 @@ function renderPanel(idx) {
   const jong = d["종"] ? `${d["종"]}종` : "";
   const gwon = d["권"] ? `${d["권"]}권` : "";
 
-  const fields = [
-    ["작품 코드",  d["작품 코드"]],
-    ["작가(국문)", d["작가(국문)"]],
-    ["작가(원어)", d["작가(원어)"] || d["작가 (원어)"]],
-    ["출판사",      d["출판사"]],
-    ["발행연도",    d["발행연도"]],
-    ["크기(가로x세로x두께)", size], 
-    ["소전권서",    d["소전권서"]],
-    ["종/권",       [jong, gwon].filter(v => v).join(", ")], 
-    ["일러스트",    d["일러스트(국문)"]],
-    ["현위치",      d["현위치"]],
-    ["비고",        d["비고"]],
-  ].filter(([, v]) => v && String(v).trim() !== "");
-
-  const code = String(d["작품 코드"] || "");
-  const s    = isBookmarked(code);
-  const descHTML = d["도서 설명"] ? `<div class="detail-desc"><div class="field-label" style="margin-bottom:8px; font-weight:bold; border-bottom:1px solid var(--border); padding-bottom:5px;">도서 설명</div><div>${String(d["도서 설명"]).replace(/\n/g, '<br>')}</div></div>` : "";
-
-  document.getElementById("detail-content").innerHTML = `
-    ${galleryHTML}
-    <div class="detail-header">
-      <div>
-        <div class="detail-title">${d["표제(국문)"] || ""}</div>
-        <div class="detail-title-sub">${d["표제(원어)"] || ""}</div>
-      </div>
-      <button class="btn-bm ${s ? "saved" : ""}" data-code="${code
+  const fields =
