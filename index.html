@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BookArt</title>
   <style>
-    /* ── 아이보리 컬러 변수 (레이아웃·구조는 원본 동일) ── */
+    /* ── 아이보리 컬러 변수 ── */
     :root {
       --bg:      #F7F3EA;
       --surface: #EDE7D6;
@@ -105,6 +105,52 @@
     .btn-search:hover { background: #a88530; }
     #error-msg { color: var(--red); font-size: 11px; margin-top: 5px; text-align: center; }
 
+    /* ── [신규] 큐레이션 & 인기 도서 섹션 스타일 ── */
+    .home-showcase { margin-top: 25px; }
+    .section-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; letter-spacing: 0.5px; }
+    .curation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    @media (max-width: 600px) { .curation-grid { grid-template-columns: 1fr; } }
+    
+    .curation-card {
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .curation-card:hover {
+      background: #fff;
+      border-color: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(28,20,8,0.05);
+    }
+    .curation-tag { font-size: 11px; color: var(--gold); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+    .curation-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .curation-sub { font-size: 12px; color: var(--sub); line-height: 1.4; }
+
+    /* ── [신규] A-Z / 가나다 브라우징 섹션 스타일 ── */
+    .az-browse-section {
+      background: rgba(255, 255, 255, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 25px;
+    }
+    .az-toggle-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .btn-toggle {
+      background: none; border: 1px solid var(--border); padding: 5px 12px;
+      font-size: 12px; border-radius: 20px; cursor: pointer; color: var(--sub); font-family: inherit;
+    }
+    .btn-toggle.active { background: var(--gold); color: #fff; border-color: var(--gold); font-weight: 600; }
+    .az-index-box { display: flex; flex-wrap: wrap; gap: 5px; }
+    .idx-btn {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      background: #fff; border: 1px solid var(--border); border-radius: 4px;
+      font-size: 11px; font-weight: 600; color: var(--text); cursor: pointer; transition: all 0.15s;
+    }
+    .idx-btn:hover, .idx-btn.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+
     /* ── Loading ── */
     #loading { display: none; text-align: center; padding: 48px 0; }
     .spinner {
@@ -145,7 +191,6 @@
       border-color: var(--gold);
     }
 
-    /* 목록용 섬네일 — 항상 표시, 실패 시 onerror로 숨김 */
     .list-thumb {
       width: 70px;
       height: 70px;
@@ -208,7 +253,6 @@
     }
     .back-btn:hover { background: var(--border); }
 
-    /* 갤러리 — 항상 flex 표시, 개별 이미지 실패 시 onerror로 해당 아이템 숨김 */
     .gallery-container {
       width: 100%;
       display: flex;
@@ -235,8 +279,7 @@
     .gallery-container::-webkit-scrollbar { height: 4px; }
     .gallery-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    /* ── 상세 헤더 ── */
-    .detail- {
+    .detail-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -246,7 +289,6 @@
     .detail-title { font-size: 22px; font-weight: 700; line-height: 1.3; color: var(--text); }
     .detail-title-sub { font-size: 13px; color: var(--sub); margin-top: 4px; }
 
-    /* ★ 초판연도 / 작가 생몰년 뱃지 */
     .detail-meta-row {
       display: flex;
       flex-wrap: wrap;
@@ -266,7 +308,6 @@
     }
     .meta-badge .badge-label { color: var(--gold); font-weight: 600; font-size: 11px; }
 
-    /* ── 상세 그리드 ── */
     .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -357,7 +398,6 @@
 
 <div id="app">
 
-  <!-- 검색 탭 -->
   <div id="search-tab">
     <div class="search-wrap">
       <div class="search-box">
@@ -366,6 +406,44 @@
         <button class="btn-search" onclick="doSearch()">검색</button>
       </div>
       <div id="error-msg"></div>
+    </div>
+
+    <div id="home-discovery-zone">
+      
+      <div class="az-browse-section" style="margin-top: 25px;">
+        <div class="az-toggle-row">
+          <button class="btn-toggle active" id="toggle-artist" onclick="setBrowseTarget('artist')">작가 탐색</button>
+          <button class="btn-toggle" id="toggle-title" onclick="setBrowseTarget('title')">작품 탐색</button>
+        </div>
+        <div class="az-index-box" id="index-container">
+          </div>
+      </div>
+
+      <div class="home-showcase">
+        <h3 class="section-title">소전 추천 큐레이션</h3>
+        <div class="curation-grid">
+          <div class="curation-card" onclick="clickCuration('마티스')">
+            <div class="curation-tag">Popular</div>
+            <div class="curation-name">앙리 마티스의 북아트</div>
+            <div class="curation-sub">야수파 거장이 그려낸 강렬한 색채와 현대 미술적 바인딩의 조화</div>
+          </div>
+          <div class="curation-card" onclick="clickCuration('피카소')">
+            <div class="curation-tag">Theme</div>
+            <div class="curation-name">입체주의와 책의 만남</div>
+            <div class="curation-sub">파블로 피카소가 참여한 위대한 문학 삽화들과 희귀 에디션 모음</div>
+          </div>
+          <div class="curation-card" onclick="clickCuration('20세기')">
+            <div class="curation-tag">Collection</div>
+            <div class="curation-name">20세기 빈티지 마스터피스</div>
+            <div class="curation-sub">아름다운 장인 정신과 제본 예술의 극치를 달리는 도서 에디션</div>
+          </div>
+          <div class="curation-card" onclick="clickCuration('바인딩')">
+            <div class="curation-tag">Focus</div>
+            <div class="curation-name">독창적인 아티스트 바인딩</div>
+            <div class="curation-sub">전통적인 형태를 허물고 예술적 조형물로 거듭난 책 디자인</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="loading">
@@ -384,7 +462,6 @@
     </div>
   </div>
 
-  <!-- 북마크 탭 -->
   <div id="bookmark-screen">
     <div class="bm-header">
       <span class="bm-count" id="bm-count"></span>
@@ -399,13 +476,14 @@
 
 <script>
 /* ════════════════════════════════════════════
-   ★ Apps Script 배포 URL을 여기에 입력하세요
+   ★ Apps Script 배포 URL
    ════════════════════════════════════════════ */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxak15K6mN0VaNedvPzBHgTYCt4oXUPEwsvYHC_OyXRBs8NnNgQtUoOK1P5UJQ8vO2G/exec";
 
 /* ── 상태 ── */
 let allData     = [];
 let lastKeyword = "";
+let browseTarget = "artist"; // 'artist' 또는 'title'
 
 /* ── 북마크 아이콘 ── */
 const BM_EMPTY = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>`;
@@ -451,21 +529,52 @@ function switchTab(tab) {
   document.getElementById("bookmark-screen").style.display = s ? "none"  : "block";
   if (!s) renderBMScreen();
 }
+
 /* ── 메인 홈으로 이동 (초기화) ── */
 function goHome() {
-  // 1. 입력창 비우기
   document.getElementById("keyword").value = "";
-  // 2. 에러 메시지 비우기
   document.getElementById("error-msg").textContent = "";
-  // 3. 모든 데이터 초기화
   allData = [];
   lastKeyword = "";
-  // 4. URL 파라미터 제거 및 히스토리 정리 (주소창 깔끔하게)
   history.pushState({}, "", window.location.pathname);
-  // 5. 검색 탭으로 전환 및 화면 상태 초기화
   switchTab('search');
   setView("none"); 
+  document.getElementById("home-discovery-zone").style.display = "block"; // 홈 탐색 영역 다시 표시
+  renderIndexButtons();
 }
+
+/* ════════════════════════════════════════════
+   [신규 로직] 탐색 인덱스 구현
+   ════════════════════════════════════════════ */
+function setBrowseTarget(target) {
+  browseTarget = target;
+  document.getElementById("toggle-artist").classList.toggle("active", target === 'artist');
+  document.getElementById("toggle-title").classList.toggle("active", target === 'title');
+  renderIndexButtons();
+}
+
+function renderIndexButtons() {
+  const container = document.getElementById("index-container");
+  const krChars = ["ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+  const enChars = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+  
+  const allChars = [...krChars, ...enChars];
+  container.innerHTML = allChars.map(char => `
+    <button class="idx-btn" onclick="clickIndexChar('${char}')">${char}</button>
+  `).join("");
+}
+
+function clickIndexChar(char) {
+  // 인덱스 글자를 검색창에 넣고 곧바로 실시간 연동 검색을 수행합니다.
+  document.getElementById("keyword").value = char;
+  doSearch();
+}
+
+function clickCuration(keyword) {
+  document.getElementById("keyword").value = keyword;
+  doSearch();
+}
+
 /* ════════════════════════════════════════════
    검색
    ════════════════════════════════════════════ */
@@ -473,12 +582,17 @@ async function doSearch() {
   const keyword = document.getElementById("keyword").value.trim();
   if (!keyword) { document.getElementById("error-msg").textContent = "검색어를 입력하세요."; return; }
   document.getElementById("error-msg").textContent = "";
+  
+  // 검색이 수행되면 홈 큐레이션 섹션을 가려 가독성을 높입니다.
+  document.getElementById("home-discovery-zone").style.display = "none";
   setView("loading");
+  
   try {
     const res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
     const json = await res.json();
     if (!json.found || !json.data.length) {
       setView("none");
+      document.getElementById("home-discovery-zone").style.display = "block"; // 실패 시 원상 복구
       document.getElementById("error-msg").textContent = "검색 결과가 없습니다.";
       return;
     }
@@ -488,6 +602,7 @@ async function doSearch() {
     renderList();
   } catch {
     setView("none");
+    document.getElementById("home-discovery-zone").style.display = "block";
     document.getElementById("error-msg").textContent = "서버 오류가 발생했습니다.";
   }
 }
@@ -511,7 +626,6 @@ function listItemHTML(item, idx) {
   const photos     = item["사진"] ? item["사진"].toString().split(",") : [];
   const firstPhoto = photos.map(p => p.trim()).find(p => p.startsWith("http")) || "";
 
-  /* ★ 핵심 수정: onerror로 실패 시 숨김 (onload 방식 대신) */
   const thumbHTML = firstPhoto
     ? `<div class="list-thumb" id="lth-${idx}">
          <img src="${firstPhoto}"
@@ -545,6 +659,8 @@ function listItemHTML(item, idx) {
 function renderPanel(idx) {
   const d = allData[idx];
   if (!d) return;
+  
+  document.getElementById("home-discovery-zone").style.display = "none";
   history.pushState({ view: "detail", idx, keyword: lastKeyword }, "",
     `?q=${encodeURIComponent(lastKeyword)}&item=${idx}`);
   setView("detail");
@@ -562,7 +678,7 @@ function renderPanel(idx) {
         </div>`).join("")}
     </div>` : "";
 
-  /* 신규: 뱃지 처리 */
+  /* 뱃지 처리 */
   const firstEd   = d["초판연도"]      ? String(d["초판연도"]).trim()      : "";
   const birthYear = d["작가 출생년도"] ? String(d["작가 출생년도"]).trim() : "";
   const deathYear = d["작가 사망년도"] ? String(d["작가 사망년도"]).trim() : "";
@@ -572,10 +688,8 @@ function renderPanel(idx) {
   if (birthYear || deathYear)
     badges += `<span class="meta-badge"><span class="badge-label">작가 생몰년</span>${birthYear && deathYear ? birthYear + " – " + deathYear : birthYear || deathYear}</span>`;
 
-  /* ★ 요청사항 1: 가로x세로x두께 합치기 */
   const size = [d["가로"], d["세로"], d["두께 D"]].filter(v => v).join(" x ");
   
-  /* ★ 요청사항 2: 종, 권 단위 붙이기 */
   const jong = d["종"] ? `${d["종"]}종` : "";
   const gwon = d["권"] ? `${d["권"]}권` : "";
 
@@ -586,9 +700,9 @@ function renderPanel(idx) {
     ["작가(원어)", d["작가(원어)"] || d["작가 (원어)"]],
     ["출판사",      d["출판사"]],
     ["발행연도",    d["발행연도"]],
-    ["크기(가로x세로x두께)", size], // 합쳐진 크기
+    ["크기(가로x세로x두께)", size], 
     ["소전권서",    d["소전권서"]],
-    ["종/권",       [jong, gwon].filter(v => v).join(", ")], // 0종, 0권 형태
+    ["종/권",       [jong, gwon].filter(v => v).join(", ")], 
     ["일러스트",    d["일러스트(국문)"]],
     ["현위치",      d["현위치"]],
     ["비고",        d["비고"]],
@@ -597,7 +711,6 @@ function renderPanel(idx) {
   const code = String(d["작품 코드"] || "");
   const s    = isBookmarked(code);
 
-  /* ★ 요청사항 3: 도서 설명 섹션에 제목 추가 */
   const descHTML = d["도서 설명"] ? `
     <div class="detail-desc">
       <div class="field-label" style="margin-bottom: 8px; font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 5px;">도서 설명</div>
@@ -634,9 +747,18 @@ function goBack() { history.back(); }
 
 window.addEventListener("popstate", async (e) => {
   const st = e.state;
-  if (!st) { setView("none"); return; }
-  if (st.view === "list") { setView("none"); renderList(); }
+  if (!st) { 
+    setView("none"); 
+    document.getElementById("home-discovery-zone").style.display = "block";
+    return; 
+  }
+  if (st.view === "list") { 
+    setView("none"); 
+    document.getElementById("home-discovery-zone").style.display = "none";
+    renderList(); 
+  }
   else if (st.view === "detail") {
+    document.getElementById("home-discovery-zone").style.display = "none";
     if (!allData.length && st.keyword) await fetchAndRender(st.keyword, st.idx);
     else renderPanel(st.idx);
   }
@@ -644,6 +766,7 @@ window.addEventListener("popstate", async (e) => {
 
 /* ── 북마크 탭 렌더 ── */
 function renderBMScreen() {
+  document.getElementById("home-discovery-zone").style.display = "none"; // 북마크 탭에선 홈 탐색 영역 숨김
   const bms  = getBMs(), keys = Object.keys(bms);
   document.getElementById("bm-count").textContent = `북마크 ${keys.length}건`;
   if (!keys.length) {
@@ -688,21 +811,37 @@ function openBMItem(code) {
 
 /* ── URL 파라미터 복원 ── */
 async function fetchAndRender(keyword, itemIdx) {
+  document.getElementById("home-discovery-zone").style.display = "none";
   setView("loading");
   try {
     const res  = await fetch(`${SCRIPT_URL}?code=${encodeURIComponent(keyword)}`);
     const json = await res.json();
-    if (!json.found || !json.data.length) { setView("none"); return; }
+    if (!json.found || !json.data.length) { 
+      setView("none"); 
+      document.getElementById("home-discovery-zone").style.display = "block";
+      return; 
+    }
     allData = json.data; lastKeyword = keyword;
     if (itemIdx !== null && allData[itemIdx]) renderPanel(itemIdx);
     else renderList();
-  } catch { setView("none"); }
+  } catch { 
+    setView("none"); 
+    document.getElementById("home-discovery-zone").style.display = "block";
+  }
 }
 
+/* ── 초기 실행 ── */
 (function init() {
+  renderIndexButtons(); // A-Z 버턴 생성
   const p = new URLSearchParams(window.location.search);
   const q = p.get("q"), item = p.get("item");
-  if (q) { document.getElementById("keyword").value = q; fetchAndRender(q, item !== null ? parseInt(item) : null); }
+  if (q) { 
+    document.getElementById("keyword").value = q; 
+    fetchAndRender(q, item !== null ? parseInt(item) : null); 
+  } else {
+    // 검색어가 없으면 초기 홈 화면용 탐색 존 노출
+    document.getElementById("home-discovery-zone").style.display = "block";
+  }
 })();
 </script>
 </body>
